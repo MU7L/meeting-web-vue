@@ -1,24 +1,11 @@
 <template>
-    <el-card>
-        <video ref="videoRef" autoplay muted></video>
-    </el-card>
+    <a-card><video :srcObject="$props.stream" autoplay></video></a-card>
 </template>
 
 <script setup lang="ts">
-import { ref, toRaw, watch } from 'vue';
 interface Props {
     id: string;
     stream?: MediaStream;
 }
-const props = defineProps<Props>();
-console.log(props);
-
-const videoRef = ref<HTMLVideoElement>();
-watch(
-    () => props.stream,
-    (newStream) => {
-        console.log(newStream);
-        if (videoRef.value && newStream) videoRef.value.srcObject = toRaw(newStream);
-    }
-);
+withDefaults(defineProps<Props>(), { stream: undefined });
 </script>

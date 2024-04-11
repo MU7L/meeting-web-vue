@@ -1,8 +1,34 @@
 <template>
     <a-layout>
         <a-layout-header class="fixed">Header</a-layout-header>
-        <a-layout-content>Content</a-layout-content>
-        <a-layout-footer>Footer</a-layout-footer>
+        <a-layout-content>
+            <a-tabs
+                v-model:activeKey="activeTabKey"
+                centered
+            >
+                <a-tab-pane
+                    key="layout"
+                    tab="会议"
+                    forceRender
+                >
+                    <grid-layout />
+                </a-tab-pane>
+                <a-tab-pane
+                    key="whiteboard"
+                    tab="白板"
+                    forceRender
+                    closeable
+                >
+                    <white-board />
+                </a-tab-pane>
+            </a-tabs>
+        </a-layout-content>
+        <a-layout-footer>
+            <control-bar
+                :disabled="false"
+                @change="streamChangeHandler"
+            />
+        </a-layout-footer>
     </a-layout>
 </template>
 
@@ -13,7 +39,11 @@ import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import createSocket from '@/utils/socket';
 import Peer from '@/utils/peer';
-import PeerBox from './components/PeerBox.vue';
+import GridLayout from './components/GridLayout.vue';
+import WhiteBoard from './components/WhiteBoard.vue';
+
+type ActiveTabKey = 'layout' | 'whiteboard';
+const activeTabKey = ref<ActiveTabKey>('layout');
 
 const route = useRoute();
 const meetingId = route.params.meetingId as string;
@@ -24,27 +54,26 @@ onMounted(() => {
     peerMap.value.set(id, { id, streams: [] });
 });
 
-interface StreamInfo {
-    i: string;
-    id: string;
-    stream?: MediaStream;
-}
-const streamInfoList = computed<StreamInfo[]>(() => {
-    return Array.from(peerMap.value.values()).flatMap(({ id, streams }) => {
-        if (streams.length === 0) {
-            return {
-                i: id,
-                id: id
-            };
+const layout = computed<Layout>(() => {
+    const res: Layout = [];
+    peerMap.value.forEach(peer => {
+        if (peer.streams.length === 0) {
+            res.push({
+                i: peer.id,
+                x: 0,
+                y: 0,
+                w: 1,
+                h: 1,
+                minW: 1,
+                minH: 1,
+                maxW: 1,
+                maxH: 1,
+                isDraggable: false,
+                isResizable: false,
+            });
         }
-        return streams.map((stream) => {
-            return {
-                i: stream.id,
-                id: id,
-                stream
-            };
-        });
     });
+    return res;
 });
 
 const socket = createSocket(id, token);
@@ -52,7 +81,7 @@ const socket = createSocket(id, token);
 /** 创建Peer */
 function createPeer(id: string) {
     const peer = new Peer(id);
-    peer.pc?.addEventListener('icecandidate', (e) => {
+    peer.pc?.addEventListener('icecandidate', e => {
         if (e.candidate) socket.emit('candidate', e.candidate, id);
     });
     peer.pc?.addEventListener('negotiationneeded', () => negotiate(peer));
@@ -62,7 +91,7 @@ function createPeer(id: string) {
 
 /** 协商 */
 function negotiate({ id, pc }: Peer) {
-    pc?.createOffer().then((offer) => {
+    pc?.createOffer().then(offer => {
         pc.setLocalDescription(offer);
         socket.emit('offer', offer, id);
     });
@@ -71,8 +100,8 @@ function negotiate({ id, pc }: Peer) {
 socket
     // 新用户加入房间 与老用户创建Peer
     .on('connect', () => {
-        socket.emit('join', meetingId, (idList) => {
-            idList.forEach((id) => {
+        socket.emit('join', meetingId, idList => {
+            idList.forEach(id => {
                 const peer = createPeer(id);
                 negotiate(peer);
             });
@@ -102,18 +131,19 @@ socket
         peer.pc?.addIceCandidate(candidate);
     });
 
-const videoRef = ref<HTMLVideoElement>();
-function handleUserMedia(stream?: MediaStream) {
-    if (videoRef.value && stream) {
-        videoRef.value.srcObject = stream;
-        console.log('stream', stream);
+function streamChangeHandler(newStream?: MediaStream, oldStream?: MediaStream) {
+    const peer = peerMap.value.get(id);
+    if (!peer) return;
+    let localStreams = peer.streams;
+    if (oldStream) {
+        localStreams = localStreams.filter(
+            stream => stream.id !== oldStream.id,
+        );
     }
-    peerMap.value.set(id, {
-        id,
-        streams: stream ? [stream] : []
-    });
-    console.log('handleUserMedia', peerMap.value.get(id));
-    console.log('streamInfoList', streamInfoList.value);
+    if (newStream) {
+        localStreams.push(newStream);
+    }
+    peerMap.value.set(id, { ...peer, streams: localStreams });
 }
 </script>
 

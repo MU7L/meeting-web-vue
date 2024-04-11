@@ -11,7 +11,10 @@
             </a-button>
             <template #overlay>
                 <a-menu @click="handleAudioSelect">
-                    <a-menu-item v-for="input of audioInputs" :key="input.deviceId">
+                    <a-menu-item
+                        v-for="input of audioInputs"
+                        :key="input.deviceId"
+                    >
                         {{ input.label }}
                     </a-menu-item>
                 </a-menu>
@@ -29,7 +32,10 @@
             </a-button>
             <template #overlay>
                 <a-menu @click="handleVideoSelect">
-                    <a-menu-item v-for="input of videoInputs" :key="input.deviceId">
+                    <a-menu-item
+                        v-for="input of videoInputs"
+                        :key="input.deviceId"
+                    >
                         {{ input.label }}
                     </a-menu-item>
                 </a-menu>
@@ -59,10 +65,10 @@
 <script setup lang="ts">
 import {
     AudioOutlined,
-    VideoCameraOutlined,
     DesktopOutlined,
     FundProjectionScreenOutlined,
-    PoweroffOutlined
+    PoweroffOutlined,
+    VideoCameraOutlined,
 } from '@ant-design/icons-vue';
 import { useDevicesList, useDisplayMedia, useUserMedia } from '@vueuse/core';
 import type { MenuProps } from 'ant-design-vue';
@@ -78,19 +84,19 @@ const emit = defineEmits<{
 }>();
 
 const { videoInputs, audioInputs } = useDevicesList({
-    requestPermissions: true
+    requestPermissions: true,
 });
 
 const userMediaConstraints = ref<MediaStreamConstraints>({
     video: false,
-    audio: false
+    audio: false,
 });
 const userMediaCtrl = useUserMedia({ constraints: userMediaConstraints });
 watch(
     () => userMediaCtrl.stream.value,
     (newStream, oldStream) => {
         emit('change', newStream, oldStream);
-    }
+    },
 );
 
 const displayMediaCtrl = useDisplayMedia({ video: true, audio: true });
@@ -98,7 +104,7 @@ watch(
     () => displayMediaCtrl.stream.value,
     (newStream, oldStream) => {
         emit('change', newStream, oldStream);
-    }
+    },
 );
 
 function handleAudioClick() {
@@ -116,7 +122,9 @@ function handleAudioClick() {
 }
 
 const handleAudioSelect: MenuProps['onClick'] = ({ key }) => {
-    userMediaConstraints.value.audio = { advanced: [{ deviceId: key as string }] };
+    userMediaConstraints.value.audio = {
+        advanced: [{ deviceId: key as string }],
+    };
     if (userMediaCtrl.stream.value) {
         userMediaCtrl.restart();
     } else {
@@ -139,7 +147,9 @@ function handleVideoClick() {
 }
 
 const handleVideoSelect: MenuProps['onClick'] = ({ key }) => {
-    userMediaConstraints.value.video = { advanced: [{ deviceId: key as string }] };
+    userMediaConstraints.value.video = {
+        advanced: [{ deviceId: key as string }],
+    };
     if (userMediaCtrl.stream.value) {
         userMediaCtrl.restart();
     } else {

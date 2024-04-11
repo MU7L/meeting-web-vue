@@ -8,7 +8,7 @@ class Peer {
     constructor(id: string) {
         this.id = id;
         this.pc = new RTCPeerConnection({ iceServers: [{ urls: ICE }] });
-        this.pc.addEventListener('track', (e) => {
+        this.pc.addEventListener('track', e => {
             const [stream] = e.streams;
             this.streams.push(stream);
         });

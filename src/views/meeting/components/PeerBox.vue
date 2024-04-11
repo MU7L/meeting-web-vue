@@ -1,9 +1,14 @@
 <template>
-    <a-card><video :srcObject="$props.stream" autoplay></video></a-card>
+    <a-card
+        ><video
+            :srcObject="$props.stream"
+            autoplay
+        ></video
+    ></a-card>
 </template>
 
 <script setup lang="ts">
-interface Props {
+export interface Props {
     id: string;
     stream?: MediaStream;
 }

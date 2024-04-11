@@ -1,135 +1,61 @@
 <template>
-    <el-button-group>
-        <el-dropdown @command="handleMicrophoneCmd">
-            <el-button
-                @click="handleMicrophoneClick"
-                :type="constraints.audio ? 'primary' : 'default'"
-            >
-                <el-icon><Microphone /></el-icon>
+    <a-space-compact block>
+        <a-dropdown>
+            <a-button>
+                <LikeOutlined />
                 麦克风
-            </el-button>
-            <template #dropdown>
-                <el-dropdown-menu>
-                    <el-dropdown-item
-                        v-for="device in audioDevices"
-                        :key="device.deviceId"
-                        :command="device.deviceId"
-                    >
-                        {{ device.label }}
-                    </el-dropdown-item>
-                </el-dropdown-menu>
+            </a-button>
+            <template #overlay>
+                <a-menu>
+                    <a-menu-item v-for="input of audioInputs" :key="input.deviceId">
+                        {{ input.label }}
+                    </a-menu-item>
+                </a-menu>
             </template>
-        </el-dropdown>
+        </a-dropdown>
 
-        <el-dropdown @command="handleCameraCmd">
-            <el-button @click="handleCameraClick" :type="constraints.video ? 'primary' : 'default'">
-                <el-icon><VideoCamera /></el-icon>
+        <a-dropdown>
+            <a-button>
+                <LikeOutlined />
                 视频
-            </el-button>
-            <template #dropdown>
-                <el-dropdown-menu>
-                    <el-dropdown-item
-                        v-for="device in videoDevices"
-                        :key="device.deviceId"
-                        :command="device.deviceId"
-                    >
-                        {{ device.label }}
-                    </el-dropdown-item>
-                </el-dropdown-menu>
+            </a-button>
+            <template #overlay>
+                <a-menu>
+                    <a-menu-item v-for="input of videoInputs" :key="input.deviceId">
+                        {{ input.label }}
+                    </a-menu-item>
+                </a-menu>
             </template>
-        </el-dropdown>
+        </a-dropdown>
 
-        <el-button @click="getDisplayMedia">
-            <el-icon><VideoCamera /></el-icon>
-            共享屏幕
-        </el-button>
+        <a-button>
+            <LikeOutlined />
+            屏幕共享
+        </a-button>
 
-        <el-button @click="getUserMedia">
-            <el-icon><VideoCamera /></el-icon>
+        <a-button>
+            <LikeOutlined />
             白板
-        </el-button>
+        </a-button>
 
-        <el-button @click="getUserMedia" type="danger">
-            <el-icon><VideoCamera /></el-icon>
+        <a-button>
+            <LikeOutlined />
             退出
-        </el-button>
-    </el-button-group>
+        </a-button>
+    </a-space-compact>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from 'vue';
+import { useDevicesList, useDisplayMedia, useUserMedia } from '@vueuse/core';
+import { ref } from 'vue';
 
-const emit = defineEmits<{
-    userMedia: [stream?: MediaStream];
-    displayMedia: [stream?: MediaStream];
-}>();
-
-const audioDevices = ref<MediaDeviceInfo[]>([]);
-const videoDevices = ref<MediaDeviceInfo[]>([]);
-onBeforeMount(async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-    stream.getTracks().forEach((track) => track.stop());
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    audioDevices.value = devices.filter((device) => device.kind === 'audioinput');
-    videoDevices.value = devices.filter((device) => device.kind === 'videoinput');
+const { videoInputs, audioInputs } = useDevicesList({
+    requestPermissions: true
 });
-
-const constraints = ref<MediaStreamConstraints>({
-    audio: false,
-    video: false
+const userMediaConstraints = ref<MediaStreamConstraints>({
+    video: false,
+    audio: false
 });
-
-function handleMicrophoneCmd(deviceId: string) {
-    constraints.value.audio = { deviceId };
-    getUserMedia();
-}
-
-function handleMicrophoneClick() {
-    constraints.value.audio = !constraints.value.audio;
-    getUserMedia();
-}
-
-function handleCameraCmd(deviceId: string) {
-    constraints.value.video = { deviceId };
-    getUserMedia();
-}
-
-function handleCameraClick() {
-    constraints.value.video = !constraints.value.video;
-    getUserMedia();
-}
-
-const userMediaStream = ref<MediaStream>();
-function getUserMedia() {
-    if (constraints.value.audio || constraints.value.video) {
-        navigator.mediaDevices
-            .getUserMedia(constraints.value)
-            .then((stream) => {
-                userMediaStream.value = stream;
-                emit('userMedia', stream);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    } else {
-        userMediaStream.value?.getTracks().forEach((track) => track.stop());
-    }
-}
-
-const displayMediaStream = ref<MediaStream>();
-function getDisplayMedia() {
-    if (!displayMediaStream.value) {
-        navigator.mediaDevices
-            .getDisplayMedia({ audio: true, video: true })
-            .then((stream) => {
-                displayMediaStream.value = stream;
-                emit('displayMedia', stream);
-            })
-            .catch((err) => {
-                console.log(err);
-            });
-    } else {
-        displayMediaStream.value.getTracks().forEach((track) => track.stop());
-    }
-}
+const userMedia = useUserMedia({ constraints: userMediaConstraints });
+const displayMedia = useDisplayMedia();
 </script>

@@ -1,23 +1,13 @@
 <template>
-    <el-container>
-        <el-header>Header</el-header>
-        <el-main>
-            <PeerBox
-                v-for="streamInfo in streamInfoList"
-                :key="streamInfo.i"
-                :id="streamInfo.id"
-                :srcObject="streamInfo.stream"
-                autoplay
-            />
-        </el-main>
-    </el-container>
-    <el-affix position="bottom">
-        <ControlBar @user-media="handleUserMedia" />
-    </el-affix>
+    <a-layout>
+        <a-layout-header class="fixed">Header</a-layout-header>
+        <a-layout-content>Content</a-layout-content>
+        <a-layout-footer>Footer</a-layout-footer>
+    </a-layout>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import ControlBar from './components/ControlBar.vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
@@ -30,6 +20,9 @@ const meetingId = route.params.meetingId as string;
 const { id, token } = useAuthStore();
 
 const peerMap = ref<Map<string, Peer>>(new Map());
+onMounted(() => {
+    peerMap.value.set(id, { id, streams: [] });
+});
 
 interface StreamInfo {
     i: string;
@@ -109,10 +102,25 @@ socket
         peer.pc?.addIceCandidate(candidate);
     });
 
+const videoRef = ref<HTMLVideoElement>();
 function handleUserMedia(stream?: MediaStream) {
+    if (videoRef.value && stream) {
+        videoRef.value.srcObject = stream;
+        console.log('stream', stream);
+    }
     peerMap.value.set(id, {
         id,
         streams: stream ? [stream] : []
     });
+    console.log('handleUserMedia', peerMap.value.get(id));
+    console.log('streamInfoList', streamInfoList.value);
 }
 </script>
+
+<style scoped lang="scss">
+.fixed {
+    position: 'fixed';
+    z-index: 1;
+    width: '100%';
+}
+</style>

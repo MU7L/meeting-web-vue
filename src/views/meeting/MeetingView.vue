@@ -55,7 +55,8 @@ const activeTabKey = ref<ActiveTabKey>('layout');
 .ant-layout-footer {
     position: fixed;
     bottom: 0;
-    width: 100%;
+    left: 50%;
+    transform: translateX(-50%);
     background: transparent;
 }
 </style>

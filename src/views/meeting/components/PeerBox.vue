@@ -1,10 +1,10 @@
 <template>
-    <a-card
-        ><video
+    <a-card>
+        <video
             :srcObject="$props.stream"
             autoplay
-        ></video
-    ></a-card>
+        ></video>
+    </a-card>
 </template>
 
 <script setup lang="ts">

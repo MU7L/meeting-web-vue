@@ -8,12 +8,14 @@ import { useAuthStore } from '@/stores/auth';
 import Peer from '@/utils/peer';
 import createSocket from '@/utils/socket';
 
+import PEER_MAP_CTRL from './peerProvider';
+
 const route = useRoute();
 const meetingId = route.params.meetingId as string;
 const { id, token } = useAuthStore();
 
 const peerMap = ref<Map<string, Peer>>(new Map());
-provide('peerMap', peerMap);
+const enabled = ref<boolean>(true); // TODO: 无后端调试时设为true
 
 onMounted(() => {
     peerMap.value.set(id, { id, streams: [] });
@@ -43,6 +45,7 @@ function negotiate({ id, pc }: Peer) {
 socket
     // 新用户加入房间 与老用户创建Peer
     .on('connect', () => {
+        enabled.value = true;
         socket.emit('join', meetingId, idList => {
             idList.forEach(id => {
                 const peer = createPeer(id);
@@ -73,4 +76,22 @@ socket
         if (!peer) return;
         peer.pc?.addIceCandidate(candidate);
     });
+
+function changeStream(newStream?: MediaStream, oldStream?: MediaStream) {
+    const peer = peerMap.value.get(id);
+    if (!peer) return;
+    let localStreams = peer.streams;
+    if (oldStream) {
+        localStreams = localStreams.filter(
+            stream => stream.id !== oldStream.id,
+        );
+    }
+    if (newStream) {
+        localStreams.push(newStream);
+    }
+    peerMap.value.set(id, { ...peer, streams: localStreams });
+    // TODO: 通信逻辑
+}
+
+provide(PEER_MAP_CTRL, { enabled, peerMap, changeStream });
 </script>

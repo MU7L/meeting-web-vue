@@ -3,7 +3,7 @@
         <a-dropdown>
             <a-button
                 :type="userMediaConstraints.audio ? 'primary' : 'default'"
-                :disabled="$props.disabled"
+                :disabled="disabled || audioInputs.length === 0"
                 @click="handleAudioClick"
             >
                 <audio-outlined />
@@ -24,7 +24,7 @@
         <a-dropdown>
             <a-button
                 :type="userMediaConstraints.video ? 'primary' : 'default'"
-                :disabled="$props.disabled"
+                :disabled="disabled || videoInputs.length === 0"
                 @click="handleVideoClick"
             >
                 <video-camera-outlined />
@@ -72,40 +72,34 @@ import {
 } from '@ant-design/icons-vue';
 import { useDevicesList, useDisplayMedia, useUserMedia } from '@vueuse/core';
 import type { MenuProps } from 'ant-design-vue';
-import { ref, watch } from 'vue';
+import { computed, inject, ref, watch, type Ref } from 'vue';
+import PEER_MAP_CTRL from './peerProvider';
 
-interface Props {
-    disabled: boolean;
-}
-withDefaults(defineProps<Props>(), { disabled: false });
+const peerMapCtrl = inject(PEER_MAP_CTRL);
+const disabled = computed<boolean>(
+    () => !Boolean(peerMapCtrl && peerMapCtrl.enabled.value),
+);
 
-const emit = defineEmits<{
-    change: [newStream?: MediaStream, oldStream?: MediaStream];
-}>();
-
+// 设备列表
 const { videoInputs, audioInputs } = useDevicesList({
     requestPermissions: true,
 });
 
+// 本地流控制
 const userMediaConstraints = ref<MediaStreamConstraints>({
     video: false,
     audio: false,
 });
 const userMediaCtrl = useUserMedia({ constraints: userMediaConstraints });
-watch(
-    () => userMediaCtrl.stream.value,
-    (newStream, oldStream) => {
-        emit('change', newStream, oldStream);
-    },
-);
-
 const displayMediaCtrl = useDisplayMedia({ video: true, audio: true });
-watch(
-    () => displayMediaCtrl.stream.value,
-    (newStream, oldStream) => {
-        emit('change', newStream, oldStream);
-    },
-);
+
+// 更新本地流
+function streamChangeHandler(newStream?: MediaStream, oldStream?: MediaStream) {
+    if (!peerMapCtrl) return;
+    peerMapCtrl.changeStream(newStream, oldStream);
+}
+watch(() => userMediaCtrl.stream.value, streamChangeHandler);
+watch(() => displayMediaCtrl.stream.value, streamChangeHandler);
 
 function handleAudioClick() {
     const audio = userMediaConstraints.value.audio;

@@ -14,17 +14,16 @@
 
 <script setup lang="ts">
 import { GridLayout, type Layout } from 'grid-layout-plus';
-import { computed, inject, type Ref } from 'vue';
-
-import Peer from '@/utils/peer';
+import { computed, inject } from 'vue';
 
 import PeerBox, { type Props as PeerBoxProps } from './PeerBox.vue';
+import PEER_MAP_CTRL from './peerProvider';
 
-const peerMap = inject<Ref<Map<string, Peer>>>('peerMap');
+const peerMapCtrl = inject(PEER_MAP_CTRL);
 
 const propMap = computed<Map<string, PeerBoxProps>>(() => {
     const map = new Map<string, PeerBoxProps>();
-    peerMap?.value.forEach((peer, id) => {
+    peerMapCtrl?.peerMap.value.forEach((peer, id) => {
         if (peer.streams.length === 0) {
             map.set(id, { id });
         } else {

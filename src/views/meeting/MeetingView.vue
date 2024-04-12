@@ -1,7 +1,7 @@
 <template>
     <peer-provider>
         <a-layout>
-            <a-layout-header class="fixed">Header</a-layout-header>
+            <a-layout-header>Header</a-layout-header>
             <a-layout-content>
                 <a-tabs
                     v-model:activeKey="activeTabKey"
@@ -24,7 +24,7 @@
                     </a-tab-pane>
                 </a-tabs>
             </a-layout-content>
-            <a-layout-footer>
+            <a-layout-footer class="footer">
                 <control-bar :disabled="false" />
             </a-layout-footer>
         </a-layout>
@@ -44,9 +44,7 @@ const activeTabKey = ref<ActiveTabKey>('layout');
 </script>
 
 <style scoped lang="scss">
-.fixed {
-    position: 'fixed';
-    z-index: 1;
-    width: '100%';
+.footer {
+    margin: 0 auto;
 }
 </style>

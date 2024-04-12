@@ -6,23 +6,49 @@
         vertical-compact
         use-css-transforms
     >
-        <template #item="{ item }">
-            <peer-box v-bind="propMap.get(item.i)!" />
-        </template>
+        <grid-item
+            v-for="item of layout"
+            :key="item.i"
+            v-bind="item"
+            drag-allow-from=".vue-draggable-handle"
+        >
+            <a-card
+                hoverable
+                :bodyStyle="bodyStyle"
+            >
+                <template #title>
+                    <div class="vue-draggable-handle"></div>
+                </template>
+                <video
+                    class="card-video"
+                    :srcObject="infoMap.get(String(item.i))?.stream"
+                    autoplay
+                ></video>
+            </a-card>
+        </grid-item>
     </grid-layout>
 </template>
 
 <script setup lang="ts">
-import { GridLayout, type Layout } from 'grid-layout-plus';
-import { computed, inject } from 'vue';
+import { GridItem, GridLayout, type Layout } from 'grid-layout-plus';
+import { computed, type CSSProperties, inject } from 'vue';
 
-import PeerBox, { type Props as PeerBoxProps } from './PeerBox.vue';
 import PEER_MAP_CTRL from './peerProvider';
+
+const bodyStyle: CSSProperties = {
+    height: '100%',
+    padding: 0,
+};
 
 const peerMapCtrl = inject(PEER_MAP_CTRL);
 
-const propMap = computed<Map<string, PeerBoxProps>>(() => {
-    const map = new Map<string, PeerBoxProps>();
+interface StreamInfo {
+    id: string;
+    stream?: MediaStream;
+}
+
+const infoMap = computed<Map<string, StreamInfo>>(() => {
+    const map = new Map<string, StreamInfo>();
     peerMapCtrl?.peerMap.value.forEach((peer, id) => {
         if (peer.streams.length === 0) {
             map.set(id, { id });
@@ -37,7 +63,7 @@ const propMap = computed<Map<string, PeerBoxProps>>(() => {
 
 const layout = computed<Layout>(() => {
     const layout: Layout = [];
-    propMap.value.forEach((_, i) => {
+    infoMap.value.forEach((_, i) => {
         const w = 3;
         const h = 2;
         layout.push({
@@ -51,3 +77,52 @@ const layout = computed<Layout>(() => {
     return layout;
 });
 </script>
+
+<style scoped lang="scss">
+:deep(.vgl-item) {
+    border-radius: 8px;
+}
+
+.ant-card {
+    height: 100%;
+    overflow: hidden;
+
+    :deep(.ant-card-head) {
+        min-height: 0;
+        border-bottom: none;
+    }
+
+    .ant-card-head {
+        .vue-draggable-handle {
+            z-index: 10;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            box-sizing: border-box;
+            width: 30px;
+            height: 5px;
+            border-radius: 5px;
+            background-color: black;
+            cursor: grab;
+            transition: background-color 300ms;
+
+            &:hover {
+                background-color: grey;
+            }
+        }
+    }
+
+    .ant-card-body {
+        .card-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    }
+}
+
+.ant-card-hoverable {
+    cursor: default;
+}
+</style>

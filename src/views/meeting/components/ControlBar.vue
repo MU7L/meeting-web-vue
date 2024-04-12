@@ -1,13 +1,13 @@
 <template>
     <a-space-compact block>
-        <a-dropdown>
+        <a-dropdown placement="top">
             <a-button
                 :type="userMediaConstraints.audio ? 'primary' : 'default'"
                 :disabled="disabled || audioInputs.length === 0"
                 @click="handleAudioClick"
             >
                 <audio-outlined />
-                麦克风
+                <div>麦克风</div>
             </a-button>
             <template #overlay>
                 <a-menu @click="handleAudioSelect">
@@ -21,14 +21,14 @@
             </template>
         </a-dropdown>
 
-        <a-dropdown>
+        <a-dropdown placement="top">
             <a-button
                 :type="userMediaConstraints.video ? 'primary' : 'default'"
                 :disabled="disabled || videoInputs.length === 0"
                 @click="handleVideoClick"
             >
                 <video-camera-outlined />
-                视频
+                <div>视频</div>
             </a-button>
             <template #overlay>
                 <a-menu @click="handleVideoSelect">
@@ -47,17 +47,17 @@
             @click="handleScreenClick"
         >
             <desktop-outlined />
-            屏幕共享
+            <div>屏幕共享</div>
         </a-button>
 
         <a-button>
             <fund-projection-screen-outlined />
-            白板
+            <div>白板</div>
         </a-button>
 
         <a-button danger>
             <poweroff-outlined />
-            退出
+            <div>退出</div>
         </a-button>
     </a-space-compact>
 </template>
@@ -72,12 +72,13 @@ import {
 } from '@ant-design/icons-vue';
 import { useDevicesList, useDisplayMedia, useUserMedia } from '@vueuse/core';
 import type { MenuProps } from 'ant-design-vue';
-import { computed, inject, ref, watch, type Ref } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
+
 import PEER_MAP_CTRL from './peerProvider';
 
 const peerMapCtrl = inject(PEER_MAP_CTRL);
 const disabled = computed<boolean>(
-    () => !Boolean(peerMapCtrl && peerMapCtrl.enabled.value),
+    () => !(peerMapCtrl && peerMapCtrl.enabled.value),
 );
 
 // 设备列表
@@ -159,3 +160,9 @@ function handleScreenClick() {
     }
 }
 </script>
+
+<style scoped lang="scss">
+.ant-btn {
+    height: auto;
+}
+</style>

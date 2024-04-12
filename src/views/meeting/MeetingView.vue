@@ -1,7 +1,7 @@
 <template>
     <peer-provider>
         <a-layout>
-            <a-layout-header>Header</a-layout-header>
+            <a-layout-header>{{ meetingId }}</a-layout-header>
             <a-layout-content>
                 <a-tabs
                     v-model:activeKey="activeTabKey"
@@ -24,7 +24,7 @@
                     </a-tab-pane>
                 </a-tabs>
             </a-layout-content>
-            <a-layout-footer class="footer">
+            <a-layout-footer>
                 <control-bar :disabled="false" />
             </a-layout-footer>
         </a-layout>
@@ -33,18 +33,29 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
 
 import ControlBar from './components/ControlBar.vue';
 import GridLayout from './components/GridLayout.vue';
 import PeerProvider from './components/PeerProvider.vue';
 import WhiteBoard from './components/WhiteBoard.vue';
 
+const route = useRoute();
+const meetingId = route.params.meetingId as string;
+
 type ActiveTabKey = 'layout' | 'whiteboard';
 const activeTabKey = ref<ActiveTabKey>('layout');
 </script>
 
 <style scoped lang="scss">
-.footer {
-    margin: 0 auto;
+.ant-layout-header {
+    text-align: center;
+    color: white;
+}
+.ant-layout-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: transparent;
 }
 </style>

@@ -20,7 +20,6 @@
                     <div class="vue-draggable-handle"></div>
                 </template>
                 <video
-                    class="card-video"
                     :srcObject="infoMap.get(String(item.i))?.stream"
                     autoplay
                 ></video>
@@ -34,7 +33,7 @@ import { GridItem, GridLayout, type Layout } from 'grid-layout-plus';
 import { computed, type CSSProperties, inject } from 'vue';
 
 import PEER_MAP_CTRL from './peerProvider';
-
+// TODO：响应式
 const bodyStyle: CSSProperties = {
     height: '100%',
     padding: 0,
@@ -114,7 +113,7 @@ const layout = computed<Layout>(() => {
     }
 
     .ant-card-body {
-        .card-video {
+        video {
             width: 100%;
             height: 100%;
             object-fit: contain;

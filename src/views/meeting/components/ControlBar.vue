@@ -162,6 +162,9 @@ function handleScreenClick() {
 </script>
 
 <style scoped lang="scss">
+.ant-space-compact-block {
+    justify-content: center;
+}
 .ant-btn {
     height: auto;
 }

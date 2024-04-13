@@ -7,7 +7,7 @@
         use-css-transforms
     >
         <grid-item
-            v-for="item of layout"
+            v-for="(item, index) of layout"
             :key="item.i"
             v-bind="item"
             drag-allow-from=".vue-draggable-handle"
@@ -20,8 +20,9 @@
                     <div class="vue-draggable-handle"></div>
                 </template>
                 <video
-                    :srcObject="infoMap.get(String(item.i))?.stream"
+                    :srcObject="$props.items?.[index].stream"
                     autoplay
+                    :muted="$props.items?.[index].id === id"
                 ></video>
             </a-card>
         </grid-item>
@@ -30,39 +31,35 @@
 
 <script setup lang="ts">
 import { GridItem, GridLayout, type Layout } from 'grid-layout-plus';
-import { computed, type CSSProperties, inject } from 'vue';
+import { storeToRefs } from 'pinia';
+import { computed, type CSSProperties } from 'vue';
 
-import PEER_MAP_CTRL from './peerProvider';
-// TODO：响应式
+import useAuthStore from '@/stores/auth';
+
+export interface StreamInfo {
+    i: string;
+    id: string;
+    stream?: MediaStream;
+}
+
+interface Props {
+    items: StreamInfo[];
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    items: () => [] as StreamInfo[],
+});
+
 const bodyStyle: CSSProperties = {
     height: '100%',
     padding: 0,
 };
 
-const peerMapCtrl = inject(PEER_MAP_CTRL);
-
-interface StreamInfo {
-    id: string;
-    stream?: MediaStream;
-}
-
-const infoMap = computed<Map<string, StreamInfo>>(() => {
-    const map = new Map<string, StreamInfo>();
-    peerMapCtrl?.peerMap.value.forEach((peer, id) => {
-        if (peer.streams.length === 0) {
-            map.set(id, { id });
-        } else {
-            peer.streams.forEach(stream => {
-                map.set(stream.id, { id, stream });
-            });
-        }
-    });
-    return map;
-});
+const { id } = storeToRefs(useAuthStore());
 
 const layout = computed<Layout>(() => {
     const layout: Layout = [];
-    infoMap.value.forEach((_, i) => {
+    props.items.forEach((_, i) => {
         const w = 3;
         const h = 2;
         layout.push({

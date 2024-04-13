@@ -3,7 +3,7 @@
         <a-dropdown placement="top">
             <a-button
                 :type="constraints.audio ? 'primary' : 'default'"
-                :disabled="disabled || audioInputs.length === 0"
+                :disabled="$props.disabled || audioInputs.length === 0"
                 @click="handleAudioClick"
             >
                 <audio-outlined />
@@ -27,7 +27,7 @@
         <a-dropdown placement="top">
             <a-button
                 :type="constraints.video ? 'primary' : 'default'"
-                :disabled="disabled || videoInputs.length === 0"
+                :disabled="$props.disabled || videoInputs.length === 0"
                 @click="handleVideoClick"
             >
                 <video-camera-outlined />
@@ -77,14 +77,19 @@ import {
     VideoCameraOutlined,
 } from '@ant-design/icons-vue';
 import { useDevicesList, useDisplayMedia, useUserMedia } from '@vueuse/core';
-import { computed, inject, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
-import PEER_MAP_CTRL from './peerProvider';
+interface Props {
+    disabled: boolean;
+}
 
-const peerMapCtrl = inject(PEER_MAP_CTRL);
-const disabled = computed<boolean>(
-    () => !(peerMapCtrl && peerMapCtrl.enabled.value),
-);
+const props = withDefaults(defineProps<Props>(), {
+    disabled: false,
+});
+
+const emit = defineEmits<{
+    streamChange: [newStream?: MediaStream, oldStream?: MediaStream];
+}>();
 
 // 设备列表
 const { videoInputs, audioInputs } = useDevicesList({
@@ -114,6 +119,7 @@ const { stream: displayStream, ...displayMediaCtrl } = useDisplayMedia({
 watch(
     constraints,
     (newConstraints, oldConstraints) => {
+        console.log('constraints change', newConstraints, oldConstraints);
         if (!oldConstraints.audio && !oldConstraints.video) {
             userStreamCtrl.start();
         } else if (!newConstraints.audio && !newConstraints.video) {
@@ -124,9 +130,11 @@ watch(
     },
     { deep: true },
 );
+// BUG: 多次触发
 function streamChangeHandler(newStream?: MediaStream, oldStream?: MediaStream) {
-    if (!peerMapCtrl) return;
-    peerMapCtrl.changeStream(newStream, oldStream);
+    if (props.disabled) return;
+    console.log('streamChangeHandler', newStream, oldStream);
+    emit('streamChange', newStream, oldStream);
 }
 watch(userStream, streamChangeHandler);
 watch(displayStream, streamChangeHandler);

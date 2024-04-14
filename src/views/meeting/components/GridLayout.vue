@@ -7,7 +7,7 @@
         use-css-transforms
     >
         <grid-item
-            v-for="(item, index) of layout"
+            v-for="item of layout"
             :key="item.i"
             v-bind="item"
             drag-allow-from=".vue-draggable-handle"
@@ -20,9 +20,9 @@
                     <div class="vue-draggable-handle"></div>
                 </template>
                 <video
-                    :srcObject="$props.items?.[index].stream"
+                    :srcObject="streamInfoMap.get(String(item.i))?.stream"
                     autoplay
-                    :muted="$props.items?.[index].id === id"
+                    :muted="streamInfoMap.get(String(item.i))?.id === id"
                 ></video>
             </a-card>
         </grid-item>
@@ -35,20 +35,7 @@ import { storeToRefs } from 'pinia';
 import { computed, type CSSProperties } from 'vue';
 
 import useAuthStore from '@/stores/auth';
-
-export interface StreamInfo {
-    i: string;
-    id: string;
-    stream?: MediaStream;
-}
-
-interface Props {
-    items: StreamInfo[];
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    items: () => [] as StreamInfo[],
-});
+import usePeerStore from '@/stores/peer';
 
 const bodyStyle: CSSProperties = {
     height: '100%',
@@ -56,10 +43,11 @@ const bodyStyle: CSSProperties = {
 };
 
 const { id } = storeToRefs(useAuthStore());
+const { streamInfoMap } = storeToRefs(usePeerStore());
 
 const layout = computed<Layout>(() => {
     const layout: Layout = [];
-    props.items.forEach((_, i) => {
+    streamInfoMap.value.forEach((info, i) => {
         const w = 3;
         const h = 2;
         layout.push({

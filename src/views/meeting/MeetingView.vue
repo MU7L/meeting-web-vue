@@ -2,7 +2,7 @@
     <a-layout>
         <a-layout-header>{{ meetingId }}</a-layout-header>
         <a-layout-content>
-            <grid-layout :items="streamInfoList" />
+            <grid-layout />
         </a-layout-content>
         <a-layout-footer>
             <control-bar
@@ -14,36 +14,17 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 
 import usePeers from '@/utils/peer';
 
 import ControlBar from './components/ControlBar.vue';
-import GridLayout, { type StreamInfo } from './components/GridLayout.vue';
+import GridLayout from './components/GridLayout.vue';
 
 const route = useRoute();
 const meetingId = route.params.meetingId as string;
 
-const { peerMap, active, updateLocalStream } = usePeers();
-
-const streamInfoList = computed<StreamInfo[]>(() => {
-    const list: StreamInfo[] = [];
-    peerMap.value.forEach((peer, id) => {
-        if (peer.streamMap.size === 0) {
-            list.push({ i: id, id });
-        } else {
-            peer.streamMap.forEach((stream, streamId) => {
-                list.push({
-                    i: streamId,
-                    id,
-                    stream,
-                });
-            });
-        }
-    });
-    return list;
-});
+const { active, updateLocalStream } = usePeers();
 </script>
 
 <style scoped lang="scss">

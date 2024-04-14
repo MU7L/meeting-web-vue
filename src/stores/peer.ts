@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 
+import useAuthStore from './auth';
+
 const ICE = import.meta.env.VITE_ICE;
 
 interface StreamInfo {
@@ -62,6 +64,22 @@ const usePeerStore = defineStore('peer', {
                 const [stream] = e.streams;
                 this.updateStream(id, stream);
             });
+
+            // 推流
+            // BUG: 第一个用户的流推送失败
+            const { id: localId } = useAuthStore();
+            const sidSet = this.sidsMap.get(localId);
+            if (sidSet) {
+                sidSet.forEach(sid => {
+                    const stream = this.streamMap.get(sid);
+                    if (!stream) return;
+                    stream.getTracks().forEach(track => {
+                        pc.addTrack(track, stream);
+                    });
+                });
+            }
+
+            // 存储
             this.idSet.add(id);
             this.pcMap.set(id, pc);
             return pc;

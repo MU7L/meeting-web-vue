@@ -76,13 +76,13 @@ function usePeers() {
             if (!pc) return;
             pc.addIceCandidate(candidate);
         });
+    // TODO: 退出
 
     function updateLocalStream(
         newStream?: MediaStream,
         oldStream?: MediaStream,
     ) {
         peerStore.updateStream(id.value, newStream, oldStream);
-        // TODO: 通信逻辑
         if (!newStream) return;
         const tracks = newStream.getTracks();
         pcMap.value.forEach(pc => {

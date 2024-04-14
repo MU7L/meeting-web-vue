@@ -2,7 +2,7 @@
     <a-layout>
         <a-layout-header>{{ meetingId }}</a-layout-header>
         <a-layout-content>
-            <grid-layout />
+            <my-grid-layout />
         </a-layout-content>
         <a-layout-footer>
             <control-bar
@@ -19,7 +19,7 @@ import { useRoute } from 'vue-router';
 import usePeers from '@/utils/peer';
 
 import ControlBar from './components/ControlBar.vue';
-import GridLayout from './components/GridLayout.vue';
+import MyGridLayout from './components/MyGridLayout.vue';
 
 const route = useRoute();
 const meetingId = route.params.meetingId as string;

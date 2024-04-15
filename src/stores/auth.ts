@@ -1,11 +1,11 @@
+import { useLocalStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
 
-const useAuthStore = defineStore('auth', () => {
-    const id = ref(Date.now().toString());
-    const token = ref('');
-
-    return { id, token };
+const useAuthStore = defineStore('auth', {
+    state: () => ({
+        id: useLocalStorage('id', ''),
+        token: useLocalStorage('token', ''),
+    }),
 });
 
 export default useAuthStore;

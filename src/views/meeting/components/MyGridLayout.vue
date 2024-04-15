@@ -1,12 +1,12 @@
 <template>
-    <grid-layout
+    <GridLayout
         v-model:layout="layout"
         is-draggable
         is-resizable
         vertical-compact
         use-css-transforms
     >
-        <grid-item
+        <GridItem
             v-for="item of layout"
             :key="item.i"
             v-bind="item"
@@ -25,8 +25,8 @@
                     :muted="streamInfoMap.get(String(item.i))?.id === id"
                 ></video>
             </a-card>
-        </grid-item>
-    </grid-layout>
+        </GridItem>
+    </GridLayout>
 </template>
 
 <script setup lang="ts">

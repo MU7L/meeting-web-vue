@@ -10,5 +10,6 @@ import 'dayjs/locale/zh-cn';
 import zhCN from 'ant-design-vue/es/locale/zh_CN';
 import dayjs from 'dayjs';
 import { RouterView } from 'vue-router';
+
 dayjs.locale('zh-cn');
 </script>

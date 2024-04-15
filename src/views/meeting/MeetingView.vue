@@ -2,10 +2,10 @@
     <a-layout>
         <a-layout-header>{{ meetingId }}</a-layout-header>
         <a-layout-content>
-            <my-grid-layout />
+            <MyGridLayout />
         </a-layout-content>
         <a-layout-footer>
-            <control-bar
+            <ControlBar
                 :disabled="!active"
                 @streamChange="updateLocalStream"
             />

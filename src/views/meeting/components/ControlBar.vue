@@ -6,7 +6,7 @@
                 :disabled="$props.disabled || audioInputs.length === 0"
                 @click="handleAudioClick"
             >
-                <audio-outlined />
+                <AudioOutlined />
                 <div>麦克风</div>
             </a-button>
             <template #overlay>
@@ -30,7 +30,7 @@
                 :disabled="$props.disabled || videoInputs.length === 0"
                 @click="handleVideoClick"
             >
-                <video-camera-outlined />
+                <VideoCameraOutlined />
                 <div>视频</div>
             </a-button>
             <template #overlay>
@@ -52,17 +52,17 @@
             :type="displayMediaCtrl.enabled.value ? 'primary' : 'default'"
             @click="handleScreenClick"
         >
-            <desktop-outlined />
+            <DesktopOutlined />
             <div>屏幕共享</div>
         </a-button>
 
         <a-button>
-            <fund-projection-screen-outlined />
+            <FundProjectionScreenOutlined />
             <div>白板</div>
         </a-button>
 
         <a-button danger>
-            <poweroff-outlined />
+            <PoweroffOutlined />
             <div>退出</div>
         </a-button>
     </a-space-compact>

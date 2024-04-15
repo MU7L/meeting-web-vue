@@ -10,14 +10,12 @@ interface StreamInfo {
 }
 
 const usePeerStore = defineStore('peer', {
-    state: () => {
-        return {
-            idSet: new Set<string>(),
-            pcMap: new Map<string, RTCPeerConnection>(),
-            streamMap: new Map<string, MediaStream>(),
-            sidsMap: new Map<string, Set<string>>(),
-        };
-    },
+    state: () => ({
+        idSet: new Set<string>(),
+        pcMap: new Map<string, RTCPeerConnection>(),
+        streamMap: new Map<string, MediaStream>(),
+        sidsMap: new Map<string, Set<string>>(),
+    }),
     getters: {
         streamInfoMap: state => {
             const map = new Map<string, StreamInfo>();

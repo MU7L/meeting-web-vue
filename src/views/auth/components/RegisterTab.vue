@@ -5,9 +5,30 @@
         name="register"
         :rules="rules"
         @finish="onFinish"
-        @finishFailed="onFinishFailed"
+        @finish-failed="onFinishFailed"
         :label-col="{ span: 8 }"
     >
+        <a-form-item
+            label="头像"
+            name="avatar"
+        >
+            <a-upload
+                name="avatar"
+                list-type="picture-card"
+                :show-upload-list="false"
+                accept="image/*"
+                :maxCount="1"
+                :custom-request="customRequest"
+            >
+                <PlusOutlined v-if="!formState.avatar" />
+                <img
+                    v-else
+                    :src="avatarUrl"
+                    alt="avatar"
+                />
+            </a-upload>
+        </a-form-item>
+
         <a-form-item
             label="姓名"
             name="name"
@@ -50,17 +71,20 @@
 </template>
 
 <script lang="ts" setup>
-import type { FormInstance } from 'ant-design-vue';
+import { PlusOutlined } from '@ant-design/icons-vue';
+import type { FormInstance, UploadProps } from 'ant-design-vue';
 import type { Rule } from 'ant-design-vue/es/form';
 import { storeToRefs } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import useAuthStore from '@/stores/auth';
+import axiosInstance from '@/utils/axios';
 
 const formRef = ref<FormInstance>();
 
 interface FormState {
+    avatar?: string;
     name: string;
     email: string;
     password: string;
@@ -88,7 +112,7 @@ const validatePassword2 = async (_rule: Rule, value: string) => {
     if (value === '') {
         return Promise.reject('请再次输入密码');
     } else if (value !== formState.password) {
-        return Promise.reject("两次密码不一致");
+        return Promise.reject('两次密码不一致');
     } else {
         return Promise.resolve();
     }
@@ -102,6 +126,18 @@ const rules: Record<string, Rule[]> = {
     ],
     password: [{ required: true, validator: validatePassword }],
     repeatPassword: [{ required: true, validator: validatePassword2 }],
+};
+
+// TODO: dev
+const avatarUrl = computed(() => {
+    return `http://localhost:3000/images/${formState.avatar}`;
+});
+
+const customRequest: UploadProps['customRequest'] = async ({ file }) => {
+    const data = await axiosInstance.postForm('/upload/avatar', {
+        avatar: file,
+    });
+    formState.avatar = data.avatar;
 };
 
 const { id, token } = storeToRefs(useAuthStore());

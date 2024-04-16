@@ -16,6 +16,7 @@ const usePeerStore = defineStore('peer', {
         streamMap: new Map<string, MediaStream>(),
         sidsMap: new Map<string, Set<string>>(),
     }),
+
     getters: {
         streamInfoMap: state => {
             const map = new Map<string, StreamInfo>();
@@ -36,6 +37,7 @@ const usePeerStore = defineStore('peer', {
             return map;
         },
     },
+
     actions: {
         updateStream(
             id: string,

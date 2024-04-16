@@ -1,17 +1,16 @@
 <template>
     <a-form
+        ref="formRef"
         :model="formState"
         name="register"
+        :rules="rules"
         @finish="onFinish"
         @finishFailed="onFinishFailed"
         :label-col="{ span: 8 }"
     >
-    <a-form-item
+        <a-form-item
             label="姓名"
             name="name"
-            :rules="[
-                { required: true, message: '请输入姓名' },
-            ]"
         >
             <a-input v-model:value="formState.name" />
         </a-form-item>
@@ -19,10 +18,6 @@
         <a-form-item
             label="邮箱"
             name="email"
-            :rules="[
-                { required: true, message: '请输入邮箱' },
-                { type: 'email', message: '邮箱格式错误', trigger: 'blur' },
-            ]"
         >
             <a-input v-model:value="formState.email" />
         </a-form-item>
@@ -30,7 +25,6 @@
         <a-form-item
             label="密码"
             name="password"
-            :rules="[{ required: true, message: '请输入密码' }]"
         >
             <a-input-password v-model:value="formState.password" />
         </a-form-item>
@@ -38,7 +32,6 @@
         <a-form-item
             label="重复密码"
             name="repeatPassword"
-            :rules="[{ required: true, message: '请再次输入密码' }]"
         >
             <a-input-password v-model:value="formState.repeatPassword" />
         </a-form-item>
@@ -57,11 +50,15 @@
 </template>
 
 <script lang="ts" setup>
+import type { FormInstance } from 'ant-design-vue';
+import type { Rule } from 'ant-design-vue/es/form';
 import { storeToRefs } from 'pinia';
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import useAuthStore from '@/stores/auth';
+
+const formRef = ref<FormInstance>();
 
 interface FormState {
     name: string;
@@ -77,6 +74,36 @@ const formState = reactive<FormState>({
     repeatPassword: '',
 });
 
+const validatePassword = async (_rule: Rule, value: string) => {
+    if (value === '') {
+        return Promise.reject('请输入密码');
+    } else {
+        if (formState.repeatPassword !== '') {
+            formRef.value?.validateFields('checkPass');
+        }
+        return Promise.resolve();
+    }
+};
+const validatePassword2 = async (_rule: Rule, value: string) => {
+    if (value === '') {
+        return Promise.reject('请再次输入密码');
+    } else if (value !== formState.password) {
+        return Promise.reject("两次密码不一致");
+    } else {
+        return Promise.resolve();
+    }
+};
+
+const rules: Record<string, Rule[]> = {
+    name: [{ required: true, message: '请输入姓名' }],
+    email: [
+        { required: true, message: '请输入邮箱' },
+        { type: 'email', message: '邮箱格式错误', trigger: 'blur' },
+    ],
+    password: [{ required: true, validator: validatePassword }],
+    repeatPassword: [{ required: true, validator: validatePassword2 }],
+};
+
 const { id, token } = storeToRefs(useAuthStore());
 const router = useRouter();
 const onFinish = (values: FormState) => {
@@ -91,8 +118,6 @@ const onFinishFailed = (errorInfo: any) => {
 };
 
 const disabled = computed(() => {
-    return !Object.values(formState).reduce((prev,curr) => prev && curr);
+    return !Object.values(formState).reduce((prev, curr) => prev && curr);
 });
 </script>
-
-<style scoped lang="scss"></style>

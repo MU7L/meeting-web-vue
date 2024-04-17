@@ -40,7 +40,7 @@ const router = createRouter({
 // GOOD
 router.beforeEach((to, from, next) => {
     const { logged } = useAuthStore();
-    if (to.name !== 'Login' && !logged) next({ name: 'Login' });
+    if (to.name !== 'auth' && !logged) next({ name: 'auth' });
     else next();
 });
 

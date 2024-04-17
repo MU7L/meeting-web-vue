@@ -40,6 +40,7 @@ import { computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 
 import useAuthStore from '@/stores/auth';
+import axiosInstance from '@/utils/axios';
 
 interface FormState {
     email: string;
@@ -61,10 +62,15 @@ const rules: Record<string, Rule[]> = {
 
 const { id, token } = storeToRefs(useAuthStore());
 const router = useRouter();
-const onFinish = (values: FormState) => {
-    console.log('Success:', values);
-    id.value = String(Date.now());
-    token.value = String(Date.now());
+
+interface LoginResponse {
+    id: string;
+    token: string;
+}
+const onFinish = async (values: FormState) => {
+    const res = await axiosInstance.post<LoginResponse>('/auth/login', values);
+    id.value = res.data.id;
+    token.value = res.data.token;
     router.push('/');
 };
 

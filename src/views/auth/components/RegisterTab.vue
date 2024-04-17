@@ -23,7 +23,8 @@
                 <PlusOutlined v-if="!formState.avatar" />
                 <img
                     v-else
-                    :src="avatarUrl"
+                    class="avatar-img"
+                    :src="'/uploads/' + formState.avatar"
                     alt="avatar"
                 />
             </a-upload>
@@ -64,7 +65,7 @@
                 html-type="submit"
                 block
             >
-                登录
+                注册
             </a-button>
         </a-form-item>
     </a-form>
@@ -79,7 +80,7 @@ import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import useAuthStore from '@/stores/auth';
-import axiosInstance from '@/utils/axios';
+import axiosInstance, { type ResponseData } from '@/utils/axios';
 
 const formRef = ref<FormInstance>();
 
@@ -128,24 +129,30 @@ const rules: Record<string, Rule[]> = {
     repeatPassword: [{ required: true, validator: validatePassword2 }],
 };
 
-// TODO: dev
-const avatarUrl = computed(() => {
-    return `http://localhost:3000/images/${formState.avatar}`;
-});
-
+interface UploadAvatarResponse {
+    avatar: string;
+}
 const customRequest: UploadProps['customRequest'] = async ({ file }) => {
-    const data = await axiosInstance.postForm('/upload/avatar', {
-        avatar: file,
-    });
-    formState.avatar = data.avatar;
+    const res = await axiosInstance.postForm<
+        ResponseData<UploadAvatarResponse>
+    >('/upload/avatar', { avatar: file });
+    formState.avatar = res.data.data.avatar;
 };
 
 const { id, token } = storeToRefs(useAuthStore());
 const router = useRouter();
-const onFinish = (values: FormState) => {
-    console.log('Success:', values);
-    id.value = String(Date.now());
-    token.value = String(Date.now());
+
+interface RegisterResponse {
+    id: string;
+    token: string;
+}
+const onFinish = async (values: FormState) => {
+    const res = await axiosInstance.post<ResponseData<RegisterResponse>>(
+        '/users',
+        values,
+    );
+    id.value = res.data.data.id;
+    token.value = res.data.data.token;
     router.push('/');
 };
 
@@ -157,3 +164,11 @@ const disabled = computed(() => {
     return !Object.values(formState).reduce((prev, curr) => prev && curr);
 });
 </script>
+
+<style scoped lang="scss">
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+</style>

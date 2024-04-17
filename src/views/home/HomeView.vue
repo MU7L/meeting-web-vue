@@ -6,8 +6,17 @@
                 theme="dark"
                 mode="horizontal"
             >
-                <a-menu-item key="calendar">会议</a-menu-item>
-                <a-menu-item key="team">项目组</a-menu-item>
+            <a-submenu key="/profile">
+                <a-menu-item key="/calendar">
+                    <RouterLink to="/calendar">会议</RouterLink>
+                </a-menu-item>
+            </a-submenu>
+                <a-menu-item key="/calendar">
+                    <RouterLink to="/calendar">会议</RouterLink>
+                </a-menu-item>
+                <a-menu-item key="/team">
+                    <RouterLink to="/team">项目组</RouterLink>
+                </a-menu-item>
             </a-menu>
         </a-layout-header>
         <a-layout-content>
@@ -15,12 +24,13 @@
         </a-layout-content>
     </a-layout>
 </template>
+
 <script lang="ts" setup>
 import { ref } from 'vue';
-import { RouterView } from 'vue-router';
-// TODO: 路由
+import { RouterLink, RouterView, useRoute } from 'vue-router';
 
-const selectedKeys = ref<string[]>(['calendar']);
+const route = useRoute();
+const selectedKeys = ref<string[]>([route.fullPath]);
 </script>
 
 <style scoped lang="scss">
@@ -29,14 +39,10 @@ const selectedKeys = ref<string[]>(['calendar']);
     z-index: 1;
     width: 100%;
     height: 64px;
-
-    .ant-menu-overflow {
-        justify-content: center;
-    }
 }
 
 .ant-layout-content {
-    padding: 0 50px;
+    padding: 24px 50px;
     margin-top: 64px;
 }
 </style>

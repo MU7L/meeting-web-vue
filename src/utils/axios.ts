@@ -1,22 +1,27 @@
 import { message } from 'ant-design-vue';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 import useAuthStore from '@/stores/auth';
 
+export interface ResponseData<T = any> {
+    success: boolean;
+    data: T;
+}
+
 const axiosInstance = axios.create({
     baseURL: '/api',
-    headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-    },
     timeout: 10000,
-    responseType: 'json',
 });
+
+interface ErrorResponse {
+    success: boolean;
+    message: string;
+}
 
 axiosInstance.interceptors.request.use(
     config => {
-        const { token } = useAuthStore();
-        if (token.length > 0) {
+        const { token, logged } = useAuthStore();
+        if (logged && token !== '') {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
@@ -35,9 +40,9 @@ axiosInstance.interceptors.response.use(
         }
         return response.data.data;
     },
-    error => {
-        message.error(error.message);
-        console.error(error.message);
+    (error: AxiosError<ErrorResponse>) => {
+        message.error(error.response?.data.message);
+        console.error(error.response?.data.message);
         return Promise.reject(error);
     },
 );

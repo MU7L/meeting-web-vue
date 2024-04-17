@@ -6,6 +6,10 @@ const useAuthStore = defineStore('auth', {
         id: useLocalStorage('id', ''),
         token: useLocalStorage('token', ''),
     }),
+
+    getters: {
+        logged: ({id, token}) => id !== '' && token !== '',
+    }
 });
 
 export default useAuthStore;

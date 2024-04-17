@@ -1,3 +1,10 @@
 <template>
-    <div>project</div>
+    <a-layout>
+        <a-card>
+            <a-layout>
+                <a-layout-sider></a-layout-sider>
+                <a-layout-content></a-layout-content>
+            </a-layout>
+        </a-card>
+    </a-layout>
 </template>

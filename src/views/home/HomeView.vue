@@ -6,16 +6,22 @@
                 theme="dark"
                 mode="horizontal"
             >
-            <a-submenu key="/profile">
-                <a-menu-item key="/calendar">
-                    <RouterLink to="/calendar">会议</RouterLink>
+            <a-sub-menu key="/profile" title="个人">
+                <template #icon>
+                    <a-avatar>aa</a-avatar>
+                </template>
+                <a-menu-item key="profile">
+                    个人信息
                 </a-menu-item>
-            </a-submenu>
+                <a-menu-item key="exit">
+                    <RouterLink to="/auth">退出</RouterLink>
+                </a-menu-item>
+            </a-sub-menu>
                 <a-menu-item key="/calendar">
                     <RouterLink to="/calendar">会议</RouterLink>
                 </a-menu-item>
                 <a-menu-item key="/team">
-                    <RouterLink to="/team">项目组</RouterLink>
+                    <RouterLink to="/team">课题组</RouterLink>
                 </a-menu-item>
             </a-menu>
         </a-layout-header>
@@ -36,7 +42,7 @@ const selectedKeys = ref<string[]>([route.fullPath]);
 <style scoped lang="scss">
 .ant-layout-header {
     position: fixed;
-    z-index: 1;
+    z-index: 10;
     width: 100%;
     height: 64px;
 }

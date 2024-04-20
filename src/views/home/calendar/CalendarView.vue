@@ -1,28 +1,43 @@
 <template>
     <a-layout>
+        <a-typography-title>
+            今天是 {{ dayjs().format('YYYY年M月d日') }}
+            <a-space>
+                <AddMeeting />
+                <a-button type="primary">
+                    <template #icon>
+                        <VideoCameraOutlined />
+                    </template>
+                    快速会议
+                </a-button>
+            </a-space>
+        </a-typography-title>
+
         <a-card>
-            <a-calendar v-model:value="value">
-                <template #dateCellRender="{ current }">
-                    <ul class="events">
-                        <li
-                            v-for="item in getListData(current)"
-                            :key="item.content"
+            <a-calendar v-model:value="selectedDate">
+                <template #dateCellRender="{ current }: { current: Dayjs }">
+                    <a-timeline>
+                        <a-timeline-item
+                            v-for="d of data.data.filter(d =>
+                                current.isSame(d.start, 'day'),
+                            )"
+                            :key="d.id"
+                            :color="statusColorMap[d.status]"
                         >
-                            <a-badge
-                                :status="item.type"
-                                :text="item.content"
-                            />
-                        </li>
-                    </ul>
-                </template>
-                <template #monthCellRender="{ current }">
-                    <div
-                        v-if="getMonthData(current)"
-                        class="notes-month"
-                    >
-                        <section>{{ getMonthData(current) }}</section>
-                        <span>Backlog number</span>
-                    </div>
+                            <template #dot>
+                                <CheckCircleOutlined
+                                    v-if="d.response === 'accepted'"
+                                />
+                                <QuestionCircleOutlined
+                                    v-else-if="d.response === 'pending'"
+                                />
+                                <CloseCircleOutlined
+                                    v-else-if="d.response === 'rejected'"
+                                />
+                            </template>
+                            <CalendarDetail v-bind="d" />
+                        </a-timeline-item>
+                    </a-timeline>
                 </template>
             </a-calendar>
         </a-card>
@@ -30,69 +45,70 @@
 </template>
 
 <script lang="ts" setup>
-import { Dayjs } from 'dayjs';
-import { ref } from 'vue';
+import {
+    CheckCircleOutlined,
+    CloseCircleOutlined,
+    QuestionCircleOutlined,
+    VideoCameraOutlined,
+} from '@ant-design/icons-vue';
+import dayjs, { Dayjs } from 'dayjs';
+import { computed, ref } from 'vue';
 
-const value = ref<Dayjs>();
+import type { ResponseData } from '@/utils/axios';
 
-const getListData = (value: Dayjs) => {
-    let listData;
-    switch (value.date()) {
-        case 8:
-            listData = [
-                { type: 'warning', content: 'This is warning event.' },
-                { type: 'success', content: 'This is usual event.' },
-            ];
-            break;
-        case 10:
-            listData = [
-                { type: 'warning', content: 'This is warning event.' },
-                { type: 'success', content: 'This is usual event.' },
-                { type: 'error', content: 'This is error event.' },
-            ];
-            break;
-        case 15:
-            listData = [
-                { type: 'warning', content: 'This is warning event' },
-                {
-                    type: 'success',
-                    content: 'This is very long usual event。。....',
-                },
-                { type: 'error', content: 'This is error event 1.' },
-                { type: 'error', content: 'This is error event 2.' },
-                { type: 'error', content: 'This is error event 3.' },
-                { type: 'error', content: 'This is error event 4.' },
-            ];
-            break;
-        default:
-    }
-    return listData || [];
+import AddMeeting from './modal/AddMeeting.vue';
+import CalendarDetail, {
+    type Props as CalendarDetailProps,
+} from './modal/CalendarDetail.vue';
+
+const selectedDate = ref<Dayjs>(dayjs());
+const queryRange = computed<{ from: Dayjs; to: Dayjs }>(() => {
+    const from = selectedDate.value.startOf('month').startOf('week');
+    const to = from.add(41, 'day');
+    return { from, to };
+});
+
+const statusColorMap: Record<CalendarDetailProps['status'], string> = {
+    scheduled: 'gray',
+    ongoing: 'blue',
+    completed: 'green',
 };
 
-const getMonthData = (value: Dayjs) => {
-    if (value.month() === 8) {
-        return 1394;
-    }
-};
+const data = ref<ResponseData<CalendarDetailProps[]>>({
+    success: true,
+    data: [
+        {
+            id: '1',
+            title: 'title',
+            start: dayjs(),
+            status: 'ongoing',
+            response: 'accepted',
+        },
+    ],
+});
 </script>
-<style scoped>
-.events {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+
+<style scoped lang="scss">
+.ant-typography {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
 }
-.events .ant-badge-status {
-    overflow: hidden;
-    white-space: nowrap;
-    width: 100%;
-    text-overflow: ellipsis;
-    font-size: 12px;
+
+:deep(.ant-picker-calendar-mode-switch) {
+    display: none;
 }
-.notes-month {
-    text-align: center;
-    font-size: 28px;
+
+:deep(
+        .ant-picker-calendar.ant-picker-calendar-full
+            .ant-picker-calendar-date-content
+    ) {
+    padding: 8px;
+    min-height: 86px;
+    height: auto;
 }
-.notes-month section {
-    font-size: 28px;
+
+:deep(.ant-timeline-item-head-custom) {
+    background: transparent;
 }
 </style>

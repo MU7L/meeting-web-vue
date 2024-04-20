@@ -5,6 +5,7 @@ const useAuthStore = defineStore('auth', {
     state: () => ({
         id: useLocalStorage('id', ''),
         token: useLocalStorage('token', ''),
+        name: ''
     }),
 
     getters: {

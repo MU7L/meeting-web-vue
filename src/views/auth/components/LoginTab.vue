@@ -35,12 +35,11 @@
 
 <script lang="ts" setup>
 import type { Rule } from 'ant-design-vue/es/form';
-import { storeToRefs } from 'pinia';
 import { computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 
 import useAuthStore from '@/stores/auth';
-import axiosInstance from '@/utils/axios';
+import axiosInstance, { type ResponseData } from '@/utils/axios';
 
 interface FormState {
     email: string;
@@ -60,17 +59,20 @@ const rules: Record<string, Rule[]> = {
     password: [{ required: true, message: '请输入密码' }],
 };
 
-const { id, token } = storeToRefs(useAuthStore());
+const store = useAuthStore();
 const router = useRouter();
 
-interface LoginResponse {
-    id: string;
-    token: string;
-}
 const onFinish = async (values: FormState) => {
-    const res = await axiosInstance.post<LoginResponse>('/auth/login', values);
-    id.value = res.data.id;
-    token.value = res.data.token;
+    const res = await axiosInstance.post<
+        ResponseData<{
+            id: string;
+            token: string;
+        }>
+    >('/users/login', values);
+    store.$patch({
+        id: res.data.data.id,
+        token: res.data.data.token,
+    });
     router.push('/');
 };
 
@@ -82,5 +84,3 @@ const disabled = computed(() => {
     return !Object.values(formState).reduce((prev, curr) => prev && curr);
 });
 </script>
-
-<style scoped lang="scss"></style>

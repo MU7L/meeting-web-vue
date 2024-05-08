@@ -1,17 +1,18 @@
-import { message } from 'ant-design-vue';
-import axios, { AxiosError } from 'axios';
-import { useRouter } from 'vue-router';
+import router from '@/router';
 
 import useAuthStore from '@/stores/auth';
+import { message } from 'ant-design-vue';
+import axios, { AxiosError } from 'axios';
 
 export interface ResponseData<T = any> {
     success: boolean;
+    message: string;
     data: T;
 }
 
 const axiosInstance = axios.create({
     baseURL: '/api',
-    timeout: 10000,
+    timeout: 10000
 });
 
 interface ErrorResponse {
@@ -31,26 +32,26 @@ axiosInstance.interceptors.request.use(
         console.error(error);
         message.error(error.message);
         return Promise.reject(error);
-    },
+    }
 );
 
 axiosInstance.interceptors.response.use(
     response => {
+        if (!response.data.success) {
+            throw new Error(response);
+        }
+        if (response.data.message) {
+            message.success(response.data.message);
+        }
         return response;
     },
     (error: AxiosError<ErrorResponse>) => {
-        console.error(error);
-        let errorMsg = error.message;
-        if (error.response) {
-            errorMsg = error.response.data.message;
-        }
-        message.error(errorMsg);
+        message.error(error.response?.data.message ?? error.message);
         if (error.response?.status === 401) {
-            const router = useRouter();
             router.push('/auth');
         }
         return Promise.reject(error);
-    },
+    }
 );
 
 export default axiosInstance;

@@ -18,30 +18,36 @@
                     {{ enterButtonContent[$props.status] }}
                 </a-button>
             </template>
-            <a-descriptions-item label="开始时间">{{
-                $props.start.format('M月d日 dddd H:mm')
-            }}</a-descriptions-item>
-            <a-descriptions-item label="主持人"
-                >Zhou Maomao</a-descriptions-item
-            >
-            <a-descriptions-item label="课题组"
-                >Zhou Maomao</a-descriptions-item
-            >
-            <a-descriptions-item label="参会人员"
-                >Zhou Maomao</a-descriptions-item
-            >
+            <a-descriptions-item label="开始时间">
+                {{ $props.start.format('M月d日 dddd H:mm') }}
+            </a-descriptions-item>
+            <a-descriptions-item label="主持人">
+                Zhou Maomao
+            </a-descriptions-item>
+            <a-descriptions-item label="课题组">
+                Zhou Maomao
+            </a-descriptions-item>
+            <a-descriptions-item label="参会人员">
+                Zhou Maomao
+            </a-descriptions-item>
         </a-descriptions>
         <template #footer>
             <a-button :type="$props.response === 'accepted' ? 'primary' : 'default'">
-                <template #icon><CheckCircleOutlined /></template>
+                <template #icon>
+                    <CheckCircleOutlined />
+                </template>
                 接受
             </a-button>
             <a-button :type="$props.response === 'pending' ? 'primary' : 'default'">
-                <template #icon><QuestionCircleOutlined /></template>
+                <template #icon>
+                    <QuestionCircleOutlined />
+                </template>
                 暂定
             </a-button>
             <a-button :type="$props.response === 'rejected' ? 'primary' : 'default'">
-                <template #icon><CloseCircleOutlined /></template>
+                <template #icon>
+                    <CloseCircleOutlined />
+                </template>
                 拒绝
             </a-button>
         </template>
@@ -49,11 +55,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-    CheckCircleOutlined,
-    CloseCircleOutlined,
-    QuestionCircleOutlined,
-} from '@ant-design/icons-vue';
+import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons-vue';
 import type { Dayjs } from 'dayjs';
 import { ref } from 'vue';
 
@@ -64,6 +66,7 @@ export interface Props {
     status: 'scheduled' | 'ongoing' | 'completed';
     response: 'pending' | 'accepted' | 'rejected';
 }
+
 const props = defineProps<Props>();
 
 const open = ref<boolean>(false);
@@ -71,7 +74,7 @@ const open = ref<boolean>(false);
 const enterButtonContent: Record<Props['status'], string> = {
     completed: '会议已结束',
     ongoing: '进入会议',
-    scheduled: '会议未开始',
+    scheduled: '会议未开始'
 };
 </script>
 

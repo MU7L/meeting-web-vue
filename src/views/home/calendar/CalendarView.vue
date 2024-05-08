@@ -1,10 +1,13 @@
 <template>
     <a-layout>
         <a-typography-title>
-            今天是 {{ dayjs().format('YYYY年M月d日') }}
+            今天是 {{ dayjs().format('YYYY年M月D日') }}
             <a-space>
-                <AddMeeting />
-                <a-button type="primary">
+                <BookModal />
+                <a-button
+                    type="primary"
+                    @click="handleQuickMeeting"
+                >
                     <template #icon>
                         <VideoCameraOutlined />
                     </template>
@@ -35,7 +38,7 @@
                                     v-else-if="d.response === 'rejected'"
                                 />
                             </template>
-                            <CalendarDetail v-bind="d" />
+                            <DetailModal v-bind="d" />
                         </a-timeline-item>
                     </a-timeline>
                 </template>
@@ -55,11 +58,12 @@ import dayjs, { Dayjs } from 'dayjs';
 import { computed, ref } from 'vue';
 
 import type { ResponseData } from '@/utils/axios';
+import axiosInstance from '@/utils/axios';
 
-import AddMeeting from './modal/AddMeeting.vue';
-import CalendarDetail, {
+import BookModal from './modals/BookModal.vue';
+import DetailModal, {
     type Props as CalendarDetailProps,
-} from './modal/CalendarDetail.vue';
+} from './modals/DetailModal.vue';
 
 const selectedDate = ref<Dayjs>(dayjs());
 const queryRange = computed<{ from: Dayjs; to: Dayjs }>(() => {
@@ -86,6 +90,12 @@ const data = ref<ResponseData<CalendarDetailProps[]>>({
         },
     ],
 });
+
+async function handleQuickMeeting() {
+    const res =
+        await axiosInstance.post<ResponseData<{ mid: string }>>('/meetings');
+    window.open(`/meetings/${res.data.data.mid}`);
+}
 </script>
 
 <style scoped lang="scss">

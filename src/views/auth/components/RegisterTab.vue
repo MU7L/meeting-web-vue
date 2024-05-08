@@ -24,7 +24,7 @@
                 <img
                     v-else
                     class="avatar-img"
-                    :src="'/uploads/' + formState.avatar"
+                    :src="formState.avatar"
                     alt="avatar"
                 />
             </a-upload>
@@ -75,7 +75,6 @@
 import { PlusOutlined } from '@ant-design/icons-vue';
 import type { FormInstance, UploadProps } from 'ant-design-vue';
 import type { Rule } from 'ant-design-vue/es/form';
-import { storeToRefs } from 'pinia';
 import { computed, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -129,30 +128,29 @@ const rules: Record<string, Rule[]> = {
     repeatPassword: [{ required: true, validator: validatePassword2 }],
 };
 
-interface UploadAvatarResponse {
-    avatar: string;
-}
 const customRequest: UploadProps['customRequest'] = async ({ file }) => {
     const res = await axiosInstance.postForm<
-        ResponseData<UploadAvatarResponse>
-    >('/upload/avatar', { avatar: file });
+        ResponseData<{
+            avatar: string;
+        }>
+    >('/avatars', { avatar: file });
     formState.avatar = res.data.data.avatar;
 };
 
-const { id, token } = storeToRefs(useAuthStore());
+const store = useAuthStore();
 const router = useRouter();
 
-interface RegisterResponse {
-    id: string;
-    token: string;
-}
 const onFinish = async (values: FormState) => {
-    const res = await axiosInstance.post<ResponseData<RegisterResponse>>(
-        '/users',
-        values,
-    );
-    id.value = res.data.data.id;
-    token.value = res.data.data.token;
+    const res = await axiosInstance.post<
+        ResponseData<{
+            id: string;
+            token: string;
+        }>
+    >('/users', values);
+    store.$patch({
+        id: res.data.data.id,
+        token: res.data.data.token,
+    });
     router.push('/');
 };
 

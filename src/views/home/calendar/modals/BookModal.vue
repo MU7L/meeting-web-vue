@@ -17,7 +17,7 @@
             :model="formState"
             name="addMeeting"
             :label-col="{ span: 6 }"
-            :wrapper-col="{span: 18}"
+            :wrapper-col="{ span: 18 }"
             @finish="onFinish"
             @finishFailed="onFinishFailed"
         >
@@ -37,13 +37,17 @@
 
             <a-form-item
                 label="会议时间"
-                name="start"
+                name="range"
             >
                 <a-range-picker
-                    :show-time="{ format: 'HH:mm' }"
-                    format="YYYY-MM-DD HH:mm"
+                    v-model="formState.range"
+                    :disabled-date="disabledDate"
+                    :disabled-time="disabledTime"
+                    :show-time="{
+                        hideDisabledOptions: true,
+                    }"
+                    format="M月D日 HH:mm"
                     :placeholder="['开始时间', '结束时间']"
-                    @ok="handleRangeOk"
                 />
             </a-form-item>
 
@@ -81,17 +85,15 @@ const open = ref<boolean>(false);
 interface FormState {
     title: string;
     description: string;
-    start: Dayjs;
-    end: Dayjs;
+    range: [Dayjs, Dayjs];
     teamId: string[];
 }
 
-const { id, name } = storeToRefs(useAuthStore());
+const { id, profile } = storeToRefs(useAuthStore());
 const formState = reactive<FormState>({
-    title: name.value + '预定的会议',
+    title: profile.value.name + '预定的会议',
     description: '',
-    start: dayjs(),
-    end: dayjs(),
+    range: [dayjs(), dayjs().add(1, 'hour')],
     teamId: [],
 });
 
@@ -109,10 +111,23 @@ const onFinishFailed = (errorInfo: any) => {
     console.log('Failed:', errorInfo);
 };
 
-function handleRangeOk(dates: [Dayjs, Dayjs] | [string, string]) {
-    const [start, end] = dates.map(dayjs);
-    formState.start = start;
-    formState.end = end;
-    console.log(formState);
+// 不可选日期
+const disabledDate = (current: Dayjs) => {
+    return current && current.isBefore(undefined, 'day');
+};
+
+function range(from: number, to: number) {
+    return Array.from({ length: to - from + 1 }, (_, i) => from + i);
 }
+// 不可选时间
+const disabledTime = (current: Dayjs) => {
+    const now = dayjs();
+    return {
+        disabledHours: () => range(0, now.hour() - 1),
+        disabledMinutes: () =>
+            current && current.hour() === now.hour()
+                ? range(0, now.minute())
+                : [],
+    };
+};
 </script>

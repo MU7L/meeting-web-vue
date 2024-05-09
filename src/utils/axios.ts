@@ -6,7 +6,7 @@ import axios, { AxiosError } from 'axios';
 
 export interface ResponseData<T = any> {
     success: boolean;
-    message: string;
+    message?: string;
     data: T;
 }
 
@@ -38,7 +38,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
     response => {
         if (!response.data.success) {
-            throw new Error(response);
+            throw new Error(response.data.message);
         }
         if (response.data.message) {
             message.success(response.data.message);

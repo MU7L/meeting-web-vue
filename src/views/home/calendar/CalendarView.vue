@@ -1,9 +1,9 @@
 <template>
     <a-layout>
-        <a-typography-title>
+        <a-typography-title class="header-btn">
             今天是 {{ dayjs().format('YYYY年M月D日') }}
             <a-space>
-                <BookModal />
+                <BookModal @refresh="getMeetings" />
                 <a-button
                     type="primary"
                     @click="handleQuickMeeting"
@@ -21,24 +21,27 @@
                 <template #dateCellRender="{ current }: { current: Dayjs }">
                     <a-timeline>
                         <a-timeline-item
-                            v-for="d of data.data.filter(d =>
-                                current.isSame(d.start, 'day'),
+                            v-for="m in meetings.filter(item =>
+                                current.isSame(item.start, 'day'),
                             )"
-                            :key="d.id"
-                            :color="statusColorMap[d.status]"
+                            :key="m._id"
+                            :color="StatusColorMap[m.status]"
                         >
                             <template #dot>
-                                <CheckCircleOutlined
-                                    v-if="d.response === 'accepted'"
+                                <ClockCircleOutlined
+                                    v-if="m.status === 'pending'"
                                 />
                                 <QuestionCircleOutlined
-                                    v-else-if="d.response === 'pending'"
+                                    v-else-if="m.status === 'ongoing'"
                                 />
-                                <CloseCircleOutlined
-                                    v-else-if="d.response === 'rejected'"
+                                <CheckCircleOutlined
+                                    v-else-if="m.status === 'finished'"
                                 />
                             </template>
-                            <DetailModal v-bind="d" />
+                            <DetailModal :mid="m._id"
+                                :title="m.title"
+                                :start="m.start"
+                                :end="m.end" />
                         </a-timeline-item>
                     </a-timeline>
                 </template>
@@ -47,59 +50,66 @@
     </a-layout>
 </template>
 
-<script lang="ts" setup>
-import {
-    CheckCircleOutlined,
-    CloseCircleOutlined,
-    QuestionCircleOutlined,
-    VideoCameraOutlined,
-} from '@ant-design/icons-vue';
-import dayjs, { Dayjs } from 'dayjs';
-import { computed, ref } from 'vue';
-
+<script lang="ts"
+    setup>
+import useAuthStore from '@/stores/auth';
 import type { ResponseData } from '@/utils/axios';
 import axiosInstance from '@/utils/axios';
+import type { MeetingInfo, MeetingStatus } from '@/views/home/calendar/types';
+import {
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    QuestionCircleOutlined,
+    VideoCameraOutlined
+} from '@ant-design/icons-vue';
+import dayjs, { Dayjs } from 'dayjs';
+import { storeToRefs } from 'pinia';
+import { computed, onMounted, ref, watch } from 'vue';
 
 import BookModal from './modals/BookModal.vue';
-import DetailModal, {
-    type Props as CalendarDetailProps,
-} from './modals/DetailModal.vue';
+import DetailModal from './modals/DetailModal.vue';
 
 const selectedDate = ref<Dayjs>(dayjs());
-const queryRange = computed<{ from: Dayjs; to: Dayjs }>(() => {
+const selectedRange = computed<[Dayjs, Dayjs]>(() => {
     const from = selectedDate.value.startOf('month').startOf('week');
     const to = from.add(41, 'day');
-    return { from, to };
+    return [from, to];
 });
 
-const statusColorMap: Record<CalendarDetailProps['status'], string> = {
-    scheduled: 'gray',
+const meetings = ref<MeetingInfo[]>([]);
+const { id } = storeToRefs(useAuthStore());
+
+async function getMeetings() {
+    const [from, to] = selectedRange.value.map(d => d.format());
+    const res = await axiosInstance.get<ResponseData<MeetingInfo<string>[]>>(`/users/${id.value}/meetings`, {
+        params: { from, to }
+    });
+    meetings.value = res.data.data.map(item => ({
+        ...item,
+        start: dayjs(item.start),
+        end: dayjs(item.end)
+    }));
+}
+
+watch(selectedRange, getMeetings);
+onMounted(getMeetings);
+
+const StatusColorMap: Record<MeetingStatus, string> = {
+    pending: 'gray',
     ongoing: 'blue',
-    completed: 'green',
+    finished: 'green'
 };
-
-const data = ref<ResponseData<CalendarDetailProps[]>>({
-    success: true,
-    data: [
-        {
-            id: '1',
-            title: 'title',
-            start: dayjs(),
-            status: 'ongoing',
-            response: 'accepted',
-        },
-    ],
-});
 
 async function handleQuickMeeting() {
     const res =
         await axiosInstance.post<ResponseData<{ mid: string }>>('/meetings');
-    window.open(`/meetings/${res.data.data.mid}`);
+    window.open(`/meeting/${res.data.data.mid}`);
 }
+
 </script>
 
 <style scoped lang="scss">
-.ant-typography {
+.header-btn {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -109,16 +119,19 @@ async function handleQuickMeeting() {
     display: none;
 }
 
-:deep(
-        .ant-picker-calendar.ant-picker-calendar-full
-            .ant-picker-calendar-date-content
-    ) {
-    padding: 8px;
-    min-height: 86px;
-    height: auto;
+:deep(tr) {
+    vertical-align: top;
+
+    .ant-picker-calendar-date-content {
+        min-height: 86px;
+        height: auto !important;
+        padding: 8px;
+    }
 }
 
+
 :deep(.ant-timeline-item-head-custom) {
+    margin-top: 4px;
     background: transparent;
 }
 </style>

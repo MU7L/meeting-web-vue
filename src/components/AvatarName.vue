@@ -1,14 +1,14 @@
 <template>
     <div>
-        <a-avatar :src="$props.avatar">{{ $props.name }}</a-avatar>
-        <span>{{ $props.name }}</span>
+        <a-avatar :src="$props.avatar">{{ $props.name ?? '-' }}</a-avatar>
+        <span>{{ $props.name ?? '-' }}</span>
     </div>
 </template>
 
 <script setup lang="ts">
 defineProps<{
-    avatar: string;
-    name: string;
+    avatar?: string;
+    name?: string;
 }>();
 </script>
 

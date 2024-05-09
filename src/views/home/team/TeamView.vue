@@ -67,7 +67,8 @@
     </a-layout>
 </template>
 
-<script setup lang="ts">
+<script setup
+    lang="ts">
 import AvatarProfile from '@/components/AvatarName.vue';
 import useAuthStore from '@/stores/auth';
 import axiosInstance, { type ResponseData } from '@/utils/axios';
@@ -122,25 +123,33 @@ function getOperation(record: Member): Operation[] {
                 return [{
                     danger: true,
                     content: '解散课题组',
-                    onClick: () => {}
+                    onClick: () => {
+                        message.info('开发中~');
+                    }
                 }];
             case 'member':
                 return [{
                     danger: true,
                     content: '移除成员',
-                    onClick: () => {}
+                    onClick: () => {
+                        message.info('开发中~');
+                    }
                 }];
             case 'new':
                 return [{
                     content: '同意加入',
-                    onClick: () => {}
+                    onClick: () => {
+                        acceptJoin(record);
+                    }
                 }];
         }
     } else if (record.user._id === id.value) {
         return [{
             danger: true,
             content: '退出课题组',
-            onClick: () => {}
+            onClick: () => {
+                message.info('开发中~');
+            }
         }];
     }
     return [];
@@ -188,9 +197,19 @@ function copy(text: string) {
     message.success('复制成功');
 }
 
+async function acceptJoin(record: Member) {
+    const tid = selectedTeam.value?._id;
+    const uid = record.user._id;
+    if (tid) {
+        await axiosInstance.post(`/teams/${tid}/members`, { uid });
+        await queryTeams();
+    }
+}
+
 </script>
 
-<style scoped lang="scss">
+<style scoped
+    lang="scss">
 .ant-space {
     margin-bottom: 19px;
     justify-content: end;

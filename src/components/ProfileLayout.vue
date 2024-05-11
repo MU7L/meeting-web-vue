@@ -1,10 +1,9 @@
 <template>
     <a-layout>
         <a-layout-header>
-            <slot name="header" />
-            <a-dropdown>
-                <AvatarName v-bind="profile"
-                    class="avatar-name" />
+            <!-- 神奇，为什么float元素放前面就不会自动换行 -->
+            <a-dropdown class="float-right">
+                <AvatarName v-bind="profile" />
                 <template #overlay>
                     <a-menu @click="handleClick">
                         <a-menu-item key="settings">
@@ -22,6 +21,7 @@
                     </a-menu>
                 </template>
             </a-dropdown>
+            <slot name="header" />
         </a-layout-header>
         <a-layout-content>
             <slot />
@@ -62,19 +62,10 @@ function handleClick({ key }: { key: string }) {
     height: 100%;
 
     .ant-layout-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        color: rgba(255, 255, 255, 0.65);
 
-        .avatar-name {
-            height: auto;
-            display: flex;
-            align-items: center;
-            color: rgba(255, 255, 255, 0.65);
-
-            > *:not(:last-child) {
-                margin-right: 8px;
-            }
+        .float-right {
+            float: right;
         }
     }
 

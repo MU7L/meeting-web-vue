@@ -1,95 +1,98 @@
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
-import { useRoute } from 'vue-router';
 
 import useAuthStore from '@/stores/auth';
 import usePeerStore from '@/stores/peer';
 
 import createSocket from './socket';
 
-function usePeers() {
-    const route = useRoute();
-    const meetingId = route.params.meetingId as string;
+const ICE = import.meta.env.VITE_ICE;
+
+function usePeers(mid: string) {
+    // 数据源
     const { id, token } = storeToRefs(useAuthStore());
-
     const peerStore = usePeerStore();
-    const { idSet, pcMap } = storeToRefs(peerStore);
+    const { pcMap } = storeToRefs(peerStore);
 
-    const active = ref<boolean>(false); // TODO: 无后端调试时设为true
-
+    // 通讯
+    const active = ref<boolean>(false);
     const socket = createSocket(id.value, token.value);
-
-    // TODO: 无后端调试时调用
-    // peerMap.value.set(id.value, { id: id.value, streamMap: new Map() });
-    // socket.disconnect();
 
     /** 创建Peer */
     function createPeer(id: string) {
-        const pc = peerStore.addPeer(id);
+        const pc = new RTCPeerConnection({ iceServers: [{ urls: ICE }] });
         pc.addEventListener('icecandidate', e => {
-            if (e.candidate) socket.emit('candidate', e.candidate, id);
+            if (e.candidate) socket.emit('candidate', id, e.candidate);
         });
         pc.addEventListener('negotiationneeded', () => negotiate(id, pc));
+        peerStore.addPeer(id, pc);
         return pc;
     }
 
     /** 协商 */
-    function negotiate(id: string, pc: RTCPeerConnection) {
-        pc.createOffer().then(offer => {
-            pc.setLocalDescription(offer);
-            socket.emit('offer', offer, id);
-        });
+    async function negotiate(id: string, pc: RTCPeerConnection) {
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        socket.emit('offer', id, offer);
     }
 
     socket
         // 新用户加入房间 与老用户创建Peer
         .on('connect', () => {
             active.value = true;
-            idSet.value.add(id.value);
-            socket.emit('join', meetingId, idList => {
-                idList.forEach(id => {
+            peerStore.initLocal();
+            socket.emit('join', mid, idList => {
+                idList.forEach(async id => {
                     const peer = createPeer(id);
-                    negotiate(id, peer);
+                    await negotiate(id, peer);
                 });
             });
         })
         // 老用户接收到新用户加入房间
         .on('join', createPeer)
         // 接收到offer
-        .on('offer', async (offer, id) => {
+        .on('offer', async (id, offer) => {
             const pc = pcMap.value.get(id);
             if (!pc) return;
             await pc.setRemoteDescription(offer);
             const answer = await pc.createAnswer();
-            pc.setLocalDescription(answer);
-            socket.emit('answer', answer, id);
+            await pc.setLocalDescription(answer);
+            socket.emit('answer', id, answer);
         })
         // 接收到answer
-        .on('answer', (answer, id) => {
+        .on('answer', async (id, answer) => {
             const pc = pcMap.value.get(id);
             if (!pc) return;
-            pc.setRemoteDescription(answer);
+            await pc.setRemoteDescription(answer);
         })
         // candidate
-        .on('candidate', (candidate, id) => {
+        .on('candidate', async (id, candidate) => {
             const pc = pcMap.value.get(id);
             if (!pc) return;
-            pc.addIceCandidate(candidate);
+            await pc.addIceCandidate(candidate);
         });
+
     // TODO: 退出
 
+    /** 更新本地流并推送 */
     function updateLocalStream(
         newStream?: MediaStream,
-        oldStream?: MediaStream,
+        oldStream?: MediaStream
     ) {
+        // 本地
         peerStore.updateStream(id.value, newStream, oldStream);
-        if (!newStream) return;
-        const tracks = newStream.getTracks();
-        pcMap.value.forEach(pc => {
-            tracks.forEach(track => {
-                pc.addTrack(track, newStream);
+        // 远端
+        if (oldStream) {
+            // TODO: 删除旧流
+        }
+        if (newStream) {
+            const tracks = newStream.getTracks();
+            pcMap.value.forEach(pc => {
+                tracks.forEach(track => {
+                    pc.addTrack(track, newStream);
+                });
             });
-        });
+        }
     }
 
     return { active, updateLocalStream };

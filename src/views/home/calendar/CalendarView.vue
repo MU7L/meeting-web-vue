@@ -38,10 +38,7 @@
                                     v-else-if="m.status === 'finished'"
                                 />
                             </template>
-                            <DetailModal :mid="m._id"
-                                :title="m.title"
-                                :start="m.start"
-                                :end="m.end" />
+                            <DetailModal v-bind="m" />
                         </a-timeline-item>
                     </a-timeline>
                 </template>
@@ -50,12 +47,7 @@
     </a-layout>
 </template>
 
-<script lang="ts"
-    setup>
-import useAuthStore from '@/stores/auth';
-import type { ResponseData } from '@/utils/axios';
-import axiosInstance from '@/utils/axios';
-import type { MeetingInfo, MeetingStatus } from '@/views/home/calendar/types';
+<script lang="ts" setup>
 import {
     CheckCircleOutlined,
     ClockCircleOutlined,
@@ -65,6 +57,11 @@ import {
 import dayjs, { Dayjs } from 'dayjs';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, ref, watch } from 'vue';
+
+import useAuthStore from '@/stores/auth';
+import type { MeetingInfo, MeetingStatus } from '@/types';
+import type { ResponseData } from '@/utils/axios';
+import axiosInstance from '@/utils/axios';
 
 import BookModal from './modals/BookModal.vue';
 import DetailModal from './modals/DetailModal.vue';

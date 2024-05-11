@@ -6,10 +6,9 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-    avatar?: string;
-    name?: string;
-}>();
+import type { User } from '@/types';
+
+defineProps<User>();
 </script>
 
 <style scoped lang="scss">

@@ -1,90 +1,102 @@
 import { defineStore } from 'pinia';
 
+import type { User } from '@/types';
+import { randomColor } from '@/utils';
+import axiosInstance, { type ResponseData } from '@/utils/axios';
+
 import useAuthStore from './auth';
 
-const ICE = import.meta.env.VITE_ICE;
-
-interface StreamInfo {
-    id: string;
-    stream?: MediaStream;
+export type StreamInfo = {
+    uid: string;
+    color: string;
+    stream: MediaStream;
 }
 
 const usePeerStore = defineStore('peer', {
-    state: () => ({
-        idSet: new Set<string>(),
-        pcMap: new Map<string, RTCPeerConnection>(),
-        streamMap: new Map<string, MediaStream>(),
-        sidsMap: new Map<string, Set<string>>(),
-    }),
+    state: () => {
+        return {
+            userMap: new Map<string, User & { color: string }>(),
+            pcMap: new Map<string, RTCPeerConnection>(),
+            streamMap: new Map<string, Map<string, MediaStream>>()
+        };
+    },
 
     getters: {
         streamInfoMap: state => {
             const map = new Map<string, StreamInfo>();
-            state.idSet.forEach(id => {
-                const sidSet = state.sidsMap.get(id);
-                if (!sidSet || sidSet.size === 0) {
-                    // 无流时以用户id为键
-                    map.set(id, { id });
-                } else {
-                    // 有流时以stream.id为键
-                    sidSet.forEach(sid => {
-                        const stream = state.streamMap.get(sid);
-                        if (!stream) return;
-                        map.set(sid, { id, stream });
+            state.streamMap.forEach((streams, uid) => {
+                const user = state.userMap.get(uid)!;
+                streams.forEach((stream) => {
+                    map.set(stream.id, {
+                        uid,
+                        color: user.color,
+                        stream
                     });
-                }
+                });
             });
             return map;
-        },
+        }
     },
 
     actions: {
+        /** 初始化本地 */
+        initLocal() {
+            const { profile } = useAuthStore();
+            this.userMap.set(profile._id, {
+                color: randomColor(),
+                ...profile
+            });
+        },
+
+        /** 更新渲染流 */
         updateStream(
             id: string,
             newStream?: MediaStream,
-            oldStream?: MediaStream,
+            oldStream?: MediaStream
         ) {
-            const sidSet = this.sidsMap.get(id) ?? new Set();
+            const tmpStreamMap = this.streamMap.get(id) ?? new Map<string, MediaStream>();
             if (oldStream) {
                 // 移除旧的stream
-                this.streamMap.delete(oldStream.id);
-                sidSet.delete(oldStream.id);
+                tmpStreamMap.delete(oldStream.id);
             }
             if (newStream) {
                 // 添加新的stream
-                this.streamMap.set(newStream.id, newStream);
-                sidSet.add(newStream.id);
+                tmpStreamMap.set(newStream.id, newStream);
             }
-            this.sidsMap.set(id, sidSet);
+            this.streamMap.set(id, tmpStreamMap);
         },
-        addPeer(id: string) {
-            const pc = new RTCPeerConnection({ iceServers: [{ urls: ICE }] });
+
+        async addPeer(uid: string, pc: RTCPeerConnection) {
             pc.addEventListener('track', e => {
-                if (e.streams.length === 0) return;
+                console.log('pc track', e);
+                if (e.streams.length === 0) return; // TODO
                 const [stream] = e.streams;
-                this.updateStream(id, stream);
+                this.updateStream(uid, stream);
             });
 
             // 推流
-            // BUG: 第一个用户的流推送失败
             const { id: localId } = useAuthStore();
-            const sidSet = this.sidsMap.get(localId);
-            if (sidSet) {
-                sidSet.forEach(sid => {
-                    const stream = this.streamMap.get(sid);
-                    if (!stream) return;
+            const localStreamMap = this.streamMap.get(localId);
+            if (localStreamMap) {
+                localStreamMap.forEach(stream => {
                     stream.getTracks().forEach(track => {
                         pc.addTrack(track, stream);
                     });
                 });
             }
 
+            // 获取个人信息
+            const res = await axiosInstance.get<ResponseData<User>>('/users/' + uid);
+
             // 存储
-            this.idSet.add(id);
-            this.pcMap.set(id, pc);
+            this.userMap.set(uid, {
+                color: randomColor(),
+                ...res.data.data
+            });
+            this.pcMap.set(uid, pc);
             return pc;
-        },
-    },
+        }
+    }
 });
 
 export default usePeerStore;

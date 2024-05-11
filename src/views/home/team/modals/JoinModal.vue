@@ -41,11 +41,13 @@
 </template>
 
 <script setup lang="ts">
-import AvatarName from '@/components/AvatarName.vue';
-import axiosInstance, { type ResponseData } from '@/utils/axios';
 import { UsergroupAddOutlined } from '@ant-design/icons-vue';
-import { message, type SelectProps } from 'ant-design-vue';
+import { type SelectProps } from 'ant-design-vue';
 import { reactive, ref } from 'vue';
+
+import AvatarName from '@/components/AvatarName.vue';
+import type { Team } from '@/types';
+import axiosInstance, { type ResponseData } from '@/utils/axios';
 
 const open = ref(false);
 const loading = ref(false);
@@ -77,18 +79,6 @@ const query = reactive<{
     value: ''
 });
 
-type Team = {
-    _id: string;
-    name: string,
-    description: string,
-    mentor: {
-        _id: string;
-        name: string;
-        email: string;
-        avatar: string;
-    }
-}
-
 const list = ref<Team[]>([]);
 
 async function onSearch() {
@@ -100,7 +90,7 @@ async function onSearch() {
 }
 
 async function join(tid: string) {
-    const res = await axiosInstance.post<ResponseData>(`/teams/${tid}/join`);
+    await axiosInstance.post<ResponseData>(`/teams/${tid}/join`);
 }
 
 </script>

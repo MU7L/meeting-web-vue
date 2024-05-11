@@ -12,19 +12,7 @@
             v-bind="item"
             drag-allow-from=".vue-draggable-handle"
         >
-            <a-card
-                hoverable
-                :bodyStyle="bodyStyle"
-            >
-                <template #title>
-                    <div class="vue-draggable-handle"></div>
-                </template>
-                <video
-                    :srcObject="streamInfoMap.get(String(item.i))?.stream"
-                    autoplay
-                    :muted="streamInfoMap.get(String(item.i))?.id === id"
-                ></video>
-            </a-card>
+            <VideoCard v-bind="streamInfoMap.get(String(item.i))!"/>
         </GridItem>
     </GridLayout>
 </template>
@@ -32,34 +20,29 @@
 <script setup lang="ts">
 import { GridItem, GridLayout, type Layout } from 'grid-layout-plus';
 import { storeToRefs } from 'pinia';
-import { computed, type CSSProperties } from 'vue';
+import { ref, watch } from 'vue';
 
-import useAuthStore from '@/stores/auth';
 import usePeerStore from '@/stores/peer';
+import VideoCard from '@/views/meeting/components/VideoCard.vue';
 
-const bodyStyle: CSSProperties = {
-    height: '100%',
-    padding: 0,
-};
-
-const { id } = storeToRefs(useAuthStore());
 const { streamInfoMap } = storeToRefs(usePeerStore());
 
-const layout = computed<Layout>(() => {
-    const layout: Layout = [];
-    streamInfoMap.value.forEach((info, i) => {
+const layout = ref<Layout>([]);
+watch(streamInfoMap, () => {
+    const tmp: Layout = [];
+    streamInfoMap.value.forEach((_, sid) => {
         const w = 3;
         const h = 2;
-        layout.push({
-            i,
-            x: (layout.length * w) % 12,
-            y: Math.floor((layout.length * w) / 12) * h,
+        tmp.push({
+            i: sid,
+            x: (tmp.length * w) % 12,
+            y: Math.floor((tmp.length * w) / 12) * h,
             w,
             h,
         });
     });
-    return layout;
-});
+    layout.value = tmp;
+})
 </script>
 
 <style scoped lang="scss">

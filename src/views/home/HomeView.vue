@@ -27,5 +27,3 @@ import ProfileLayout from '@/components/ProfileLayout.vue';
 const route = useRoute();
 const selectedKeys = ref<string[]>([route.fullPath]);
 </script>
-
-<style scoped lang="scss"></style>

@@ -45,7 +45,7 @@
                     :disabled-date="disabledDate"
                     :disabled-time="disabledTime"
                     :show-time="{
-                        hideDisabledOptions: true,
+                        hideDisabledOptions: true
                     }"
                     format="M月D日 HH:mm"
                     :placeholder="['开始时间', '结束时间']"
@@ -81,6 +81,7 @@ import { storeToRefs } from 'pinia';
 import { onMounted, reactive, ref } from 'vue';
 
 import useAuthStore from '@/stores/auth';
+import type { Team } from '@/types';
 import axiosInstance, { type ResponseData } from '@/utils/axios';
 
 const emit = defineEmits<{
@@ -107,7 +108,6 @@ onMounted(async () => {
 const formState = reactive<FormState>({
     title: '',
     description: '',
-    // TODO: 取值赋值有问题
     range: [dayjs().add(1, 'hour'), dayjs().add(2, 'hour')],
     teamId: []
 });
@@ -150,10 +150,6 @@ async function handleOk() {
     emit('refresh');
 }
 
-type Team = {
-    _id: string;
-    name: string;
-}
 const teams = ref<Team[]>([]);
 onMounted(async () => {
     const res = await axiosInstance.get<ResponseData<Team[]>>(`/users/${id.value}/teams`);

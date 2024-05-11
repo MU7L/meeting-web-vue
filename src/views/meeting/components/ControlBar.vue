@@ -79,12 +79,10 @@ import {
 import { useDevicesList, useDisplayMedia, useUserMedia } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
 
-interface Props {
+const props = withDefaults(defineProps<{
     disabled: boolean;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-    disabled: false,
+}>(), {
+    disabled: true,
 });
 
 const emit = defineEmits<{
@@ -130,7 +128,7 @@ watch(
     },
     { deep: true },
 );
-// BUG: 多次触发
+
 function streamChangeHandler(newStream?: MediaStream, oldStream?: MediaStream) {
     if (props.disabled) return;
     console.log('streamChangeHandler', newStream, oldStream);

@@ -14,9 +14,7 @@
     </a-tooltip>
 
     <a-modal v-model:open="open">
-        <a-descriptions :title="detail?.title ?? '会议详情'"
-            layout="vertical">
-
+        <MeetingDescription v-bind="detail">
             <template #extra>
                 <a-button
                     type="link"
@@ -26,22 +24,7 @@
                     {{ EnterButtonContent[detail?.status ?? 'pending'] }}
                 </a-button>
             </template>
-
-            <a-descriptions-item label="会议时间"
-                :span="2">
-                {{ `${detail?.start.format('M月d日 dddd H:mm')} - ${detail?.end.format('H:mm')}` }}
-            </a-descriptions-item>
-            <a-descriptions-item label="主持人">
-                <AvatarName v-bind="detail?.sponsor" />
-            </a-descriptions-item>
-            <a-descriptions-item
-                label="参会人员"
-                :span="3"
-                :content-style="{flexDirection: 'column'}"
-            >
-                <AttendeeSegmented :attendees="detail?.attendees" />
-            </a-descriptions-item>
-        </a-descriptions>
+        </MeetingDescription>
 
         <template #footer>
             <template v-if="detail?.status === 'pending'">
@@ -80,22 +63,16 @@
 
 <script lang="ts" setup>
 import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons-vue';
-import dayjs, { type Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 
-import AvatarName from '@/components/AvatarName.vue';
+import MeetingDescription from '@/components/MeetingDescription.vue';
 import useAuthStore from '@/stores/auth';
+import type { MeetingDetail, MeetingInfo, MeetingStatus, UserResponse } from '@/types';
 import axiosInstance, { type ResponseData } from '@/utils/axios';
-import AttendeeSegmented from '@/views/home/calendar/components/AttendeeSegmented.vue';
-import type { MeetingDetail, MeetingStatus, UserResponse } from '@/views/home/calendar/types';
 
-const props = defineProps<{
-    mid: string;
-    title: string;
-    start: Dayjs;
-    end: Dayjs;
-}>();
+const props = defineProps<MeetingInfo>();
 
 const { id } = storeToRefs(useAuthStore());
 
@@ -105,7 +82,7 @@ const response = computed<UserResponse>(() =>
 );
 
 async function getDetail() {
-    const res = await axiosInstance.get<ResponseData<MeetingDetail<string>>>('/meetings/' + props.mid);
+    const res = await axiosInstance.get<ResponseData<MeetingDetail<string>>>('/meetings/' + props._id);
     const { start, end, createdAt, updatedAt, ...rest } = res.data.data;
     detail.value = {
         ...rest,
@@ -130,12 +107,12 @@ const EnterButtonContent: Record<MeetingStatus, string> = {
 };
 
 function enterMeeting() {
-    window.open(`/meeting/${props.mid}`);
+    window.open(`/meeting/${props._id}`);
 }
 
 async function updateResponse(nextResponse: UserResponse) {
     if (nextResponse === response.value) return;
-    await axiosInstance.put(`/meetings/${props.mid}/response`, { response: nextResponse });
+    await axiosInstance.put(`/meetings/${props._id}/response`, { response: nextResponse });
     await getDetail();
 }
 </script>

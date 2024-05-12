@@ -69,9 +69,6 @@ const usePeerStore = defineStore('peer', {
         async addPeer(uid: string, pc: RTCPeerConnection) {
             pc.addEventListener('track', e => {
                 if (e.streams.length === 0) return;
-                e.track.addEventListener('ended', e => {
-                    console.log('ended', e);
-                })
                 const [stream] = e.streams;
                 this.updateStream(uid, stream);
             });

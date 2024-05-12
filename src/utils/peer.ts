@@ -19,13 +19,13 @@ function usePeers(mid: string) {
     const socket = createSocket(id.value, token.value);
 
     /** 创建Peer */
-    function createPeer(id: string) {
+    async function createPeer(id: string) {
         const pc = new RTCPeerConnection({ iceServers: [{ urls: ICE }] });
         pc.addEventListener('icecandidate', e => {
             if (e.candidate) socket.emit('candidate', id, e.candidate);
         });
         pc.addEventListener('negotiationneeded', () => negotiate(id, pc));
-        peerStore.addPeer(id, pc);
+        await peerStore.addPeer(id, pc);
         return pc;
     }
 
@@ -43,7 +43,7 @@ function usePeers(mid: string) {
             peerStore.initLocal();
             socket.emit('join', mid, idList => {
                 idList.forEach(async id => {
-                    const peer = createPeer(id);
+                    const peer = await createPeer(id);
                     await negotiate(id, peer);
                 });
             });

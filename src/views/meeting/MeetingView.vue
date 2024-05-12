@@ -49,6 +49,7 @@ import { useRoute } from 'vue-router';
 import MeetingDescription from '@/components/MeetingDescription.vue';
 import ProfileLayout from '@/components/ProfileLayout.vue';
 import usePeerStore from '@/stores/peer';
+import useSettingStore from '@/stores/settings';
 import type { MeetingDetail } from '@/types';
 import axiosInstance, { type ResponseData } from '@/utils/axios';
 import usePeers from '@/utils/peer';
@@ -75,13 +76,15 @@ async function getDetail() {
 
 onMounted(getDetail);
 
+const { open } = storeToRefs(useSettingStore());
+onMounted(() => open.value = true);
+
 const { active, updateLocalStream } = usePeers(mid);
 const { userMap } = storeToRefs(usePeerStore());
 
 </script>
 
-<style scoped
-    lang="scss">
+<style scoped lang="scss">
 .items-center {
     display: flex;
     align-items: center;

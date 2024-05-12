@@ -27,6 +27,8 @@
             <slot />
         </a-layout-content>
     </a-layout>
+
+    <SettingsModal />
 </template>
 
 <script lang="ts" setup>
@@ -36,10 +38,13 @@ import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 import AvatarName from '@/components/AvatarName.vue';
+import SettingsModal from '@/components/SettingsModal.vue';
 import useAuthStore from '@/stores/auth';
+import useSettingStore from '@/stores/settings';
 
 const store = useAuthStore();
 const { profile } = storeToRefs(store);
+const { open } = storeToRefs(useSettingStore());
 
 onMounted(store.getProfile);
 
@@ -48,6 +53,7 @@ const router = useRouter();
 function handleClick({ key }: { key: string }) {
     switch (key) {
         case 'settings':
+            open.value = true;
             break;
         case 'logout':
             store.$reset();

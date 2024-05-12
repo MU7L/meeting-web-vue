@@ -7,10 +7,20 @@
             <div class="vue-draggable-handle"></div>
         </template>
         <video
+            v-if="hasVideo"
             ref="videoRef"
             autoplay
             :muted="$props.uid === localId"
         />
+        <div v-else class="audio-content">
+            <audio
+                ref="audioRef"
+                autoplay
+                :muted="$props.uid === localId"
+            />
+            <a-avatar size="large" :src="user?.avatar" :style="{ borderColor: borderColor }">{{user?.name}}</a-avatar>
+            {{user?.name}}
+        </div>
     </a-card>
 </template>
 
@@ -19,25 +29,40 @@ import { storeToRefs } from 'pinia';
 import { computed, type CSSProperties, onMounted, ref } from 'vue';
 
 import useAuthStore from '@/stores/auth';
-import { type StreamInfo } from '@/stores/peer';
+import usePeerStore, { type StreamInfo } from '@/stores/peer';
 
 const props = defineProps<StreamInfo>()
 const borderColor = computed(() => props.color)
 
 const { id: localId } = storeToRefs(useAuthStore());
+const {userMap} = storeToRefs(usePeerStore());
 
 const bodyStyle: CSSProperties = {
     height: '100%',
     padding: 0,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
 };
 
-
+const hasVideo = computed(() => props.stream.getVideoTracks().length > 0)
+const user = computed(() => userMap.value.get(props.uid))
 
 const videoRef = ref<HTMLVideoElement>();
+const audioRef = ref<HTMLAudioElement>();
 
 onMounted(() => {
-    if (videoRef.value) {
-        videoRef.value.srcObject = props.stream;
+    if (hasVideo.value) {
+        if (videoRef.value) {
+            videoRef.value.srcObject = props.stream;
+            videoRef.value?.addEventListener('loadedmetadata', () => {
+                videoRef.value?.play();
+            })
+        }
+    } else {
+        if (audioRef.value) {
+            audioRef.value.srcObject = props.stream;
+        }
     }
 })
 </script>
@@ -78,6 +103,16 @@ onMounted(() => {
             width: 100%;
             height: 100%;
             object-fit: contain;
+        }
+
+        .audio-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            > * {
+                margin-bottom: 8px;
+            }
         }
     }
 }

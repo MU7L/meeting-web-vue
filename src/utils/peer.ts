@@ -84,6 +84,15 @@ function usePeers(mid: string) {
         // 远端
         if (oldStream) {
             // TODO: 删除旧流
+            pcMap.value.forEach(pc => {
+                oldStream.getTracks().forEach(track => {
+                    track.stop();
+                    pc.getSenders()
+                        .filter(sender => sender.track?.id === track.id)
+                        .forEach(sender => pc.removeTrack(sender));
+                });
+            });
+            // TODO: 用socket通信
         }
         if (newStream) {
             const tracks = newStream.getTracks();

@@ -20,8 +20,9 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+import RegisterTab from '@/views/auth/components/RegisterTab.vue';
+
 import LoginTab from './components/LoginTab.vue';
-import RegisterTab from './components/RegisterTab.vue';
 
 type Tabs = 'login' | 'register';
 const tabList: Array<{ key: Tabs; tab: string }> = [

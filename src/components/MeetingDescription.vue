@@ -2,6 +2,7 @@
     <a-descriptions
         :title="$props.title"
         layout="vertical"
+        :colon="false"
     >
 
         <template #extra>
@@ -12,7 +13,7 @@
             label="会议时间"
             :span="2"
         >
-            {{ `${$props.start?.format('M月d日 dddd H:mm')} - ${$props.end?.format('H:mm')}` }}
+            {{ `${$props.start?.format('M月D日 dddd H:mm')} - ${$props.end?.format('H:mm')}` }}
         </a-descriptions-item>
         <a-descriptions-item label="主持人">
             <AvatarName v-bind="$props.sponsor" />

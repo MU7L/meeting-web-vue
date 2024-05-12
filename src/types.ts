@@ -27,7 +27,7 @@ export type MeetingStatus = 'pending' | 'ongoing' | 'finished';
 export type MeetingInfo<DataType = Dayjs> = {
     _id: string;
     title: string;
-    description: string;
+    description?: string;
     start: DataType;
     end: DataType;
     status: MeetingStatus;

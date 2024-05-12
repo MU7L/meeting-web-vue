@@ -18,9 +18,9 @@ interface ClientToServerEvents {
 
 export type SocketClient = Socket<ServerToClientEvents, ClientToServerEvents>;
 
-function createSocket(uid: string, token: string): SocketClient {
+function createSocket(id: string, token: string): SocketClient {
     return io(WS, {
-        auth: { uid, token }
+        auth: { id, token }
     });
 }
 

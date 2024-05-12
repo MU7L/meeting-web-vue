@@ -3,8 +3,8 @@
         <a-dropdown placement="top">
             <a-button
                 :type="constraints.audio ? 'primary' : 'default'"
-                :disabled="$props.disabled || audioInputs.length === 0"
-                @click="handleAudioClick"
+                :disabled="$props.disabled || options.audio.length === 0"
+                @click="switchAudio"
             >
                 <AudioOutlined />
                 <div>麦克风</div>
@@ -12,23 +12,18 @@
             <template #overlay>
                 <a-menu
                     selectable
-                    v-model:selectedKeys="currentAudioInputs"
-                >
-                    <a-menu-item
-                        v-for="input of audioInputs"
-                        :key="input.deviceId"
-                    >
-                        {{ input.label }}
-                    </a-menu-item>
-                </a-menu>
+                    :selectedKeys="[devices.audioDeviceId]"
+                    :items="options.audio"
+                    @select="selectAudio"
+                />
             </template>
         </a-dropdown>
 
         <a-dropdown placement="top">
             <a-button
                 :type="constraints.video ? 'primary' : 'default'"
-                :disabled="$props.disabled || videoInputs.length === 0"
-                @click="handleVideoClick"
+                :disabled="$props.disabled || options.video.length === 0"
+                @click="switchVideo"
             >
                 <VideoCameraOutlined />
                 <div>视频</div>
@@ -36,27 +31,22 @@
             <template #overlay>
                 <a-menu
                     selectable
-                    v-model:selectedKeys="currentVideoInputs"
-                >
-                    <a-menu-item
-                        v-for="input of videoInputs"
-                        :key="input.deviceId"
-                    >
-                        {{ input.label }}
-                    </a-menu-item>
-                </a-menu>
+                    :selectedKeys="[devices.videoDeviceId]"
+                    :items="options.video"
+                    @select="selectVideo"
+                />
             </template>
         </a-dropdown>
 
         <a-button
             :type="displayMediaCtrl.enabled.value ? 'primary' : 'default'"
-            @click="handleScreenClick"
+            @click="switchScreen"
         >
             <DesktopOutlined />
             <div>屏幕共享</div>
         </a-button>
 
-        <a-button>
+        <a-button @click="console.log(options)">
             <FundProjectionScreenOutlined />
             <div>白板</div>
         </a-button>
@@ -74,50 +64,48 @@ import {
     DesktopOutlined,
     FundProjectionScreenOutlined,
     PoweroffOutlined,
-    VideoCameraOutlined,
+    VideoCameraOutlined
 } from '@ant-design/icons-vue';
-import { useDevicesList, useDisplayMedia, useUserMedia } from '@vueuse/core';
-import { computed, ref, watch } from 'vue';
+import { useDisplayMedia, useUserMedia } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
+import { onMounted, watch } from 'vue';
+
+import useSettingStore from '@/stores/settings';
 
 const props = withDefaults(defineProps<{
     disabled: boolean;
 }>(), {
-    disabled: true,
+    disabled: true
 });
 
 const emit = defineEmits<{
     streamChange: [newStream?: MediaStream, oldStream?: MediaStream];
 }>();
 
-// 设备列表
-const { videoInputs, audioInputs } = useDevicesList({
-    requestPermissions: true,
-});
-const currentAudioInputs = ref<string[]>([]);
-const currentVideoInputs = ref<string[]>([]);
+const store = useSettingStore();
+const { devices, constraints, options } = storeToRefs(store);
+onMounted(store.getInputs)
+console.log(options.value);
+
+function selectAudio({ key }: { key: string }) {
+    devices.value.audioDeviceId = key;
+}
+
+function selectVideo({ key }: { key: string }) {
+    devices.value.videoDeviceId = key;
+}
 
 // 本地流控制
-const constraints = computed<MediaStreamConstraints>(() => ({
-    audio:
-        currentAudioInputs.value.length > 0
-            ? { advanced: [{ deviceId: currentAudioInputs.value[0] }] }
-            : false,
-    video:
-        currentVideoInputs.value.length > 0
-            ? { advanced: [{ deviceId: currentVideoInputs.value[0] }] }
-            : false,
-}));
 const { stream: userStream, ...userStreamCtrl } = useUserMedia({ constraints });
 const { stream: displayStream, ...displayMediaCtrl } = useDisplayMedia({
     video: true,
-    audio: true,
+    audio: true
 });
 
 // 更新本地流
 watch(
     constraints,
     (newConstraints, oldConstraints) => {
-        console.log('constraints change', newConstraints, oldConstraints);
         if (!oldConstraints.audio && !oldConstraints.video) {
             userStreamCtrl.start();
         } else if (!newConstraints.audio && !newConstraints.video) {
@@ -125,8 +113,7 @@ watch(
         } else {
             userStreamCtrl.restart();
         }
-    },
-    { deep: true },
+    }
 );
 
 function streamChangeHandler(newStream?: MediaStream, oldStream?: MediaStream) {
@@ -134,31 +121,30 @@ function streamChangeHandler(newStream?: MediaStream, oldStream?: MediaStream) {
     console.log('streamChangeHandler', newStream, oldStream);
     emit('streamChange', newStream, oldStream);
 }
+
 watch(userStream, streamChangeHandler);
 watch(displayStream, streamChangeHandler);
 
-function handleAudioClick() {
-    if (currentAudioInputs.value.length === 0 && audioInputs.value.length > 0) {
-        currentAudioInputs.value = [audioInputs.value[0].deviceId];
-    } else {
-        currentAudioInputs.value = [];
+function switchAudio() {
+    if (devices.value.audioDeviceId) {
+        devices.value.audioDeviceId = null;
+        return;
     }
+    if (devices.value.audioInputs.length === 0) return;
+    devices.value.audioDeviceId = devices.value.audioInputs[0].deviceId;
 }
 
-function handleVideoClick() {
-    if (currentVideoInputs.value.length === 0 && videoInputs.value.length > 0) {
-        currentVideoInputs.value = [videoInputs.value[0].deviceId];
-    } else {
-        currentVideoInputs.value = [];
+function switchVideo() {
+    if (devices.value.videoDeviceId) {
+        devices.value.videoDeviceId = null;
+        return;
     }
+    if (devices.value.videoInputs.length === 0) return;
+    devices.value.videoDeviceId = devices.value.videoInputs[0].deviceId;
 }
 
-function handleScreenClick() {
-    if (displayStream.value) {
-        displayMediaCtrl.stop();
-    } else {
-        displayMediaCtrl.start();
-    }
+function switchScreen() {
+    displayStream.value ? displayMediaCtrl.stop() : displayMediaCtrl.start();
 }
 </script>
 
@@ -166,6 +152,7 @@ function handleScreenClick() {
 .ant-space-compact-block {
     justify-content: center;
 }
+
 .ant-btn {
     height: auto;
 }

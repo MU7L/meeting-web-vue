@@ -72,7 +72,7 @@ import useAuthStore from '@/stores/auth';
 import type { MeetingDetail, MeetingInfo, MeetingStatus, UserResponse } from '@/types';
 import axiosInstance, { type ResponseData } from '@/utils/axios';
 
-const props = defineProps<MeetingInfo>();
+const props = defineProps<MeetingInfo & { id: string }>();
 
 const { id } = storeToRefs(useAuthStore());
 

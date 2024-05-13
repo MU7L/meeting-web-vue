@@ -46,12 +46,12 @@
             <div>屏幕共享</div>
         </a-button>
 
-        <a-button @click="console.log(options)">
+        <a-button>
             <FundProjectionScreenOutlined />
             <div>白板</div>
         </a-button>
 
-        <a-button danger>
+        <a-button danger @click="$emit('leave')">
             <PoweroffOutlined />
             <div>退出</div>
         </a-button>
@@ -80,6 +80,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
     streamChange: [newStream?: MediaStream, oldStream?: MediaStream];
+    leave: [];
 }>();
 
 const store = useSettingStore();
@@ -146,6 +147,7 @@ function switchVideo() {
 function switchScreen() {
     displayStream.value ? displayMediaCtrl.stop() : displayMediaCtrl.start();
 }
+
 </script>
 
 <style scoped lang="scss">

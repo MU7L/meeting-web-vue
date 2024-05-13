@@ -7,6 +7,8 @@ interface ServerToClientEvents {
     offer: (uid: string, sdp: RTCSessionDescriptionInit) => void;
     answer: (uid: string, sdp: RTCSessionDescriptionInit) => void;
     candidate: (uid: string, candidate: RTCIceCandidate) => void;
+    removeStream: (uid: string, sid: string) => void;
+    leave: (uid: string) => void;
 }
 
 interface ClientToServerEvents {
@@ -14,6 +16,7 @@ interface ClientToServerEvents {
     offer: (uid: string, sdp: RTCSessionDescriptionInit) => void;
     answer: (uid: string, sdp: RTCSessionDescriptionInit) => void;
     candidate: (uid: string, candidate: RTCIceCandidate) => void;
+    removeStream: (uid: string, sid: string) => void;
 }
 
 export type SocketClient = Socket<ServerToClientEvents, ClientToServerEvents>;

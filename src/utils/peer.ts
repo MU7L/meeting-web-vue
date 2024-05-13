@@ -1,3 +1,5 @@
+import router from '@/router';
+import { message } from 'ant-design-vue';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 
@@ -70,41 +72,60 @@ function usePeers(mid: string) {
             const pc = pcMap.value.get(id);
             if (!pc) return;
             await pc.addIceCandidate(candidate);
-        });
+        })
+        // 关闭流
+        .on('removeStream', (uid, sid) => {
+            peerStore.updateStream(uid, undefined, sid);
+        })
+        // 其他用户退出
+        .on('leave', uid => {
+            peerStore.removePeer(uid);
+        })
+        // 退出
+        .on('disconnect', () => {
+            peerStore.$reset();
+        })
 
-    // TODO: 退出
+    return {
+        active,
 
-    /** 更新本地流并推送 */
-    function updateLocalStream(
-        newStream?: MediaStream,
-        oldStream?: MediaStream
-    ) {
-        // 本地
-        peerStore.updateStream(id.value, newStream, oldStream);
-        // 远端
-        if (oldStream) {
-            // TODO: 删除旧流
-            pcMap.value.forEach(pc => {
-                oldStream.getTracks().forEach(track => {
-                    track.stop();
-                    pc.getSenders()
-                        .filter(sender => sender.track?.id === track.id)
-                        .forEach(sender => pc.removeTrack(sender));
+        /** 更新本地流并推送 */
+        updateLocalStream(
+            newStream?: MediaStream,
+            oldStream?: MediaStream
+        ) {
+            // 本地
+            peerStore.updateStream(id.value, newStream, oldStream);
+            // 远端
+            if (oldStream) {
+                // TODO: 删除旧流
+                pcMap.value.forEach(pc => {
+                    oldStream.getTracks().forEach(track => {
+                        track.stop();
+                        pc.getSenders()
+                            .filter(sender => sender.track?.id === track.id)
+                            .forEach(sender => pc.removeTrack(sender));
+                    });
                 });
-            });
-            // TODO: 用socket通信
-        }
-        if (newStream) {
-            const tracks = newStream.getTracks();
-            pcMap.value.forEach(pc => {
-                tracks.forEach(track => {
-                    pc.addTrack(track, newStream);
+                socket.emit('removeStream', id.value, oldStream.id);
+            }
+            if (newStream) {
+                const tracks = newStream.getTracks();
+                pcMap.value.forEach(pc => {
+                    tracks.forEach(track => {
+                        pc.addTrack(track, newStream);
+                    });
                 });
-            });
-        }
-    }
+            }
+        },
 
-    return { active, updateLocalStream };
+        /** 退出 */
+        leave() {
+            socket.removeAllListeners();
+            socket.disconnect();
+            socket.close();
+        },
+    };
 }
 
 export default usePeers;

@@ -52,12 +52,16 @@ const usePeerStore = defineStore('peer', {
         updateStream(
             id: string,
             newStream?: MediaStream,
-            oldStream?: MediaStream
+            oldStream?: MediaStream | string
         ) {
             const tmpStreamMap = this.streamMap.get(id) ?? new Map<string, MediaStream>();
             if (oldStream) {
                 // 移除旧的stream
-                tmpStreamMap.delete(oldStream.id);
+                if (typeof oldStream === 'string') {
+                    tmpStreamMap.delete(oldStream);
+                } else {
+                    tmpStreamMap.delete(oldStream.id);
+                }
             }
             if (newStream) {
                 // 添加新的stream
@@ -94,7 +98,13 @@ const usePeerStore = defineStore('peer', {
             });
             this.pcMap.set(uid, pc);
             return pc;
-        }
+        },
+
+        removePeer(uid: string) {
+            this.userMap.delete(uid);
+            this.pcMap.delete(uid);
+            this.streamMap.delete(uid);
+        },
     }
 });
 

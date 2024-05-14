@@ -25,6 +25,11 @@ export type SortedMessage = {
     time: Dayjs;
 }
 
+export type CanvasCmd = {
+    fn: string;
+    args?: any[];
+}
+
 const usePeerStore = defineStore('peer', {
     state: () => {
         return {
@@ -32,7 +37,9 @@ const usePeerStore = defineStore('peer', {
             pcMap: new Map<string, RTCPeerConnection>(),
             streamMap: new Map<string, Map<string, MediaStream>>(),
             textChannelMap: new Map<string, RTCDataChannel>(),
-            messages: [] as ChatMessage[]
+            messages: [] as ChatMessage[],
+            hasNewMsg: false,
+            canvasChannelMap: new Map<string, RTCDataChannel>()
         };
     },
 
@@ -111,19 +118,31 @@ const usePeerStore = defineStore('peer', {
         recvMessage(e: MessageEvent<string>) {
             const rawData = JSON.parse(e.data) as ChatMessage<string>;
             this.messages.push({ ...rawData, time: dayjs(rawData.time) });
+            this.hasNewMsg = true;
+        },
+
+        sendCanvasCmd(cmd: CanvasCmd) {
+            this.canvasChannelMap.forEach(channel => {
+                channel.send(JSON.stringify(cmd));
+            });
         },
 
         async addPeer(uid: string, pc: RTCPeerConnection, isInitiator?: boolean) {
             if (isInitiator) {
-                const ch = pc.createDataChannel('text');
-                this.textChannelMap.set(uid, ch);
-                ch.addEventListener('message', this.recvMessage);
+                const textCh = pc.createDataChannel('text');
+                this.textChannelMap.set(uid, textCh);
+                textCh.addEventListener('message', this.recvMessage);
+
+                const canvasCh = pc.createDataChannel('canvas');
+                this.canvasChannelMap.set(uid, canvasCh);
             }
 
             pc.addEventListener('datachannel', e => {
                 if (e.channel.label === 'text') {
                     this.textChannelMap.set(uid, e.channel);
                     e.channel.addEventListener('message', this.recvMessage);
+                } else if (e.channel.label === 'canvas') {
+                    this.canvasChannelMap.set(uid, e.channel);
                 }
             });
 

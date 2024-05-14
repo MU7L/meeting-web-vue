@@ -35,18 +35,16 @@
             <ControlBar
                 :disabled="!active"
                 @streamChange="updateLocalStream"
-                @leave="leave"
             />
         </div>
     </ProfileLayout>
 </template>
 
 <script setup lang="ts">
-import { Modal } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import { storeToRefs } from 'pinia';
 import { onMounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 
 import MeetingDescription from '@/components/MeetingDescription.vue';
 import ProfileLayout from '@/components/ProfileLayout.vue';
@@ -60,7 +58,6 @@ import ControlBar from './components/ControlBar.vue';
 import MyGridLayout from './components/MyGridLayout.vue';
 
 const route = useRoute();
-const router = useRouter();
 const mid = route.params.meetingId as string;
 
 const detail = ref<MeetingDetail>();
@@ -84,16 +81,6 @@ onMounted(() => open.value = true);
 
 const { active, updateLocalStream } = usePeers(mid);
 const { userMap } = storeToRefs(usePeerStore());
-
-function leave() {
-    Modal.confirm({
-        title: '确认退出会议？',
-        content: '点击确认将退出会议',
-        onOk() {
-            router.push('/');
-        },
-    });
-}
 
 </script>
 

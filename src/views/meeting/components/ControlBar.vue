@@ -46,26 +46,27 @@
             <div>屏幕共享</div>
         </a-button>
 
-        <a-button>
-            <FundProjectionScreenOutlined />
-            <div>白板</div>
-        </a-button>
-
+        <WhiteboardModal />
         <ChatDrawer />
 
-        <a-button danger @click="$emit('leave')">
-            <PoweroffOutlined />
-            <div>退出</div>
-        </a-button>
+        <a-popconfirm
+            title="确定要退出会议吗？"
+            ok-text="确定"
+            cancel-text="取消"
+            @confirm="$router.push('/')"
+        >
+            <a-button danger>
+                <PoweroffOutlined />
+                <div>退出</div>
+            </a-button>
+        </a-popconfirm>
     </a-space-compact>
 </template>
 
 <script setup lang="ts">
-import ChatDrawer from '@/views/meeting/components/ChatDrawer.vue';
 import {
     AudioOutlined,
     DesktopOutlined,
-    FundProjectionScreenOutlined,
     PoweroffOutlined,
     VideoCameraOutlined
 } from '@ant-design/icons-vue';
@@ -74,6 +75,8 @@ import { storeToRefs } from 'pinia';
 import { onMounted, watch } from 'vue';
 
 import useSettingStore from '@/stores/settings';
+import ChatDrawer from '@/views/meeting/components/ChatDrawer.vue';
+import WhiteboardModal from '@/views/meeting/components/WhiteboardModal.vue';
 
 const props = withDefaults(defineProps<{
     disabled: boolean;
@@ -83,13 +86,11 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
     streamChange: [newStream?: MediaStream, oldStream?: MediaStream];
-    leave: [];
 }>();
 
 const store = useSettingStore();
 const { devices, constraints, options } = storeToRefs(store);
 onMounted(store.getInputs)
-console.log(options.value);
 
 function selectAudio({ key }: { key: string }) {
     devices.value.audioDeviceId = key;

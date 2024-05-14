@@ -1,9 +1,12 @@
 <template>
     <a-button
         :type="open ? 'primary' : 'default'"
-        @click="open = true"
+        @click="openModal"
+        class="enter-btn"
     >
-        <DesktopOutlined />
+        <a-badge :dot="hasNewMsg">
+            <MessageOutlined />
+        </a-badge>
         <div>聊天</div>
     </a-button>
 
@@ -40,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { DesktopOutlined } from '@ant-design/icons-vue';
+import { MessageOutlined } from '@ant-design/icons-vue';
 import { storeToRefs } from 'pinia';
 import { ref } from 'vue';
 
@@ -48,7 +51,12 @@ import usePeerStore, { type SortedMessage } from '@/stores/peer';
 
 const open = ref<boolean>(false);
 const store = usePeerStore();
-const {sortedMessages} = storeToRefs(store);
+const {hasNewMsg ,sortedMessages} = storeToRefs(store);
+
+function openModal() {
+    open.value = true;
+    store.hasNewMsg = false;
+}
 
 const tmpMsg = ref<string>('');
 function handleSend() {
@@ -59,7 +67,7 @@ function handleSend() {
 </script>
 
 <style scoped lang="scss">
-.ant-btn {
+.enter-btn {
     height: auto;
 }
 

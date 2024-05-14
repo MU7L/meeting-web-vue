@@ -51,6 +51,8 @@
             <div>白板</div>
         </a-button>
 
+        <ChatDrawer />
+
         <a-button danger @click="$emit('leave')">
             <PoweroffOutlined />
             <div>退出</div>
@@ -59,6 +61,7 @@
 </template>
 
 <script setup lang="ts">
+import ChatDrawer from '@/views/meeting/components/ChatDrawer.vue';
 import {
     AudioOutlined,
     DesktopOutlined,

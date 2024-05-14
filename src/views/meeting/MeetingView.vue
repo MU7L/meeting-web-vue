@@ -35,7 +35,7 @@
             <ControlBar
                 :disabled="!active"
                 @streamChange="updateLocalStream"
-                @leave="handleLeave"
+                @leave="leave"
             />
         </div>
     </ProfileLayout>
@@ -82,15 +82,14 @@ onMounted(getDetail);
 const { open } = storeToRefs(useSettingStore());
 onMounted(() => open.value = true);
 
-const { active, updateLocalStream, leave } = usePeers(mid);
+const { active, updateLocalStream } = usePeers(mid);
 const { userMap } = storeToRefs(usePeerStore());
 
-function handleLeave() {
+function leave() {
     Modal.confirm({
         title: '确认退出会议？',
         content: '点击确认将退出会议',
         onOk() {
-            leave();
             router.push('/');
         },
     });

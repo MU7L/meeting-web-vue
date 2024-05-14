@@ -1,3 +1,4 @@
+import dayjs, { type Dayjs } from 'dayjs';
 import { defineStore } from 'pinia';
 
 import type { User } from '@/types';
@@ -12,12 +13,26 @@ export type StreamInfo = {
     stream: MediaStream;
 }
 
+type ChatMessage<DateType = Dayjs> = {
+    uid: string;
+    content: string;
+    time: DateType;
+}
+
+export type SortedMessage = {
+    user: User & { color: string };
+    content: string;
+    time: Dayjs;
+}
+
 const usePeerStore = defineStore('peer', {
     state: () => {
         return {
             userMap: new Map<string, User & { color: string }>(),
             pcMap: new Map<string, RTCPeerConnection>(),
-            streamMap: new Map<string, Map<string, MediaStream>>()
+            streamMap: new Map<string, Map<string, MediaStream>>(),
+            textChannelMap: new Map<string, RTCDataChannel>(),
+            messages: [] as ChatMessage[]
         };
     },
 
@@ -35,6 +50,15 @@ const usePeerStore = defineStore('peer', {
                 });
             });
             return map;
+        },
+
+        sortedMessages(state): SortedMessage[] {
+            return state.messages.sort((a, b) =>
+                a.time.isBefore(b.time) ? -1 : 1
+            ).map(msg => {
+                const user = state.userMap.get(msg.uid)!;
+                return { ...msg, user };
+            });
         }
     },
 
@@ -70,7 +94,39 @@ const usePeerStore = defineStore('peer', {
             this.streamMap.set(id, tmpStreamMap);
         },
 
-        async addPeer(uid: string, pc: RTCPeerConnection) {
+        sendMessage(content: string) {
+            const { id: localId } = useAuthStore();
+            const msg = {
+                uid: localId,
+                content,
+                time: dayjs()
+            };
+            this.messages.push(msg);
+            this.textChannelMap.forEach(channel => {
+                channel.send(JSON.stringify({ ...msg, time: msg.time.format() }));
+            });
+            console.log(this.textChannelMap);
+        },
+
+        recvMessage(e: MessageEvent<string>) {
+            const rawData = JSON.parse(e.data) as ChatMessage<string>;
+            this.messages.push({ ...rawData, time: dayjs(rawData.time) });
+        },
+
+        async addPeer(uid: string, pc: RTCPeerConnection, isInitiator?: boolean) {
+            if (isInitiator) {
+                const ch = pc.createDataChannel('text');
+                this.textChannelMap.set(uid, ch);
+                ch.addEventListener('message', this.recvMessage);
+            }
+
+            pc.addEventListener('datachannel', e => {
+                if (e.channel.label === 'text') {
+                    this.textChannelMap.set(uid, e.channel);
+                    e.channel.addEventListener('message', this.recvMessage);
+                }
+            });
+
             pc.addEventListener('track', e => {
                 if (e.streams.length === 0) return;
                 const [stream] = e.streams;
@@ -104,7 +160,7 @@ const usePeerStore = defineStore('peer', {
             this.userMap.delete(uid);
             this.pcMap.delete(uid);
             this.streamMap.delete(uid);
-        },
+        }
     }
 });
 

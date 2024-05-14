@@ -1,7 +1,5 @@
-import router from '@/router';
-import { message } from 'ant-design-vue';
 import { storeToRefs } from 'pinia';
-import { ref } from 'vue';
+import { onUnmounted, ref } from 'vue';
 
 import useAuthStore from '@/stores/auth';
 import usePeerStore from '@/stores/peer';
@@ -21,13 +19,13 @@ function usePeers(mid: string) {
     const socket = createSocket(id.value, token.value);
 
     /** 创建Peer */
-    async function createPeer(id: string) {
+    async function createPeer(id: string, isInitiator?: boolean) {
         const pc = new RTCPeerConnection({ iceServers: [{ urls: ICE }] });
         pc.addEventListener('icecandidate', e => {
             if (e.candidate) socket.emit('candidate', id, e.candidate);
         });
         pc.addEventListener('negotiationneeded', () => negotiate(id, pc));
-        await peerStore.addPeer(id, pc);
+        await peerStore.addPeer(id, pc, isInitiator);
         return pc;
     }
 
@@ -45,7 +43,7 @@ function usePeers(mid: string) {
             peerStore.initLocal();
             socket.emit('join', mid, idList => {
                 idList.forEach(async id => {
-                    const peer = await createPeer(id);
+                    const peer = await createPeer(id, true);
                     await negotiate(id, peer);
                 });
             });
@@ -84,7 +82,12 @@ function usePeers(mid: string) {
         // 退出
         .on('disconnect', () => {
             peerStore.$reset();
-        })
+        });
+
+    onUnmounted(() => {
+        socket.removeAllListeners();
+        socket.close();
+    });
 
     return {
         active,
@@ -98,7 +101,6 @@ function usePeers(mid: string) {
             peerStore.updateStream(id.value, newStream, oldStream);
             // 远端
             if (oldStream) {
-                // TODO: 删除旧流
                 pcMap.value.forEach(pc => {
                     oldStream.getTracks().forEach(track => {
                         track.stop();
@@ -117,14 +119,7 @@ function usePeers(mid: string) {
                     });
                 });
             }
-        },
-
-        /** 退出 */
-        leave() {
-            socket.removeAllListeners();
-            socket.disconnect();
-            socket.close();
-        },
+        }
     };
 }
 

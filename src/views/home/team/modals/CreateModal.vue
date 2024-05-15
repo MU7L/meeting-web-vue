@@ -33,11 +33,10 @@
 
 <script setup lang="ts">
 import { PlusCircleOutlined } from '@ant-design/icons-vue';
-import { message } from 'ant-design-vue';
 import {type FormInstance} from 'ant-design-vue/es/form'
 import { reactive, ref } from 'vue';
 
-import axiosInstance, { type ResponseData } from '@/utils/axios';
+import axiosInstance from '@/utils/axios';
 
 const emit = defineEmits<{
     refresh:[]
@@ -48,9 +47,7 @@ const formRef = ref<FormInstance>();
 
 async function handleOk() {
     await formRef.value?.validate();
-    const res = await axiosInstance.post<ResponseData>('/teams', formState);
-    console.log(res.data);
-    message.success(res.data.message);
+    await axiosInstance.post('/teams', formState);
     open.value = false;
     emit('refresh');
 }

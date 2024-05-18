@@ -66,6 +66,7 @@ import { CheckCircleOutlined, CloseCircleOutlined, QuestionCircleOutlined } from
 import dayjs from 'dayjs';
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import MeetingDescription from '@/components/MeetingDescription.vue';
 import useAuthStore from '@/stores/auth';
@@ -106,8 +107,13 @@ const EnterButtonContent: Record<MeetingStatus, string> = {
     finished: '会议已结束'
 };
 
+const router = useRouter();
 function enterMeeting() {
-    window.open(`/meeting/${props._id}`);
+    const url = router.resolve({
+        name: 'meeting',
+        params: { mid: props._id }
+    })
+    window.open(url.href);
 }
 
 async function updateResponse(nextResponse: UserResponse) {

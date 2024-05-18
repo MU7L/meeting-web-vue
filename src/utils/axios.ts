@@ -1,8 +1,8 @@
-import router from '@/router';
-
-import useAuthStore from '@/stores/auth';
 import { message } from 'ant-design-vue';
 import axios, { AxiosError } from 'axios';
+
+import router from '@/router';
+import useAuthStore from '@/stores/auth';
 
 export interface ResponseData<T = any> {
     success: boolean;
@@ -10,15 +10,12 @@ export interface ResponseData<T = any> {
     data: T;
 }
 
+const BASE_URL = import.meta.env.VITE_BASE;
+
 const axiosInstance = axios.create({
-    baseURL: '/api',
+    baseURL: BASE_URL + '/api',
     timeout: 10000
 });
-
-interface ErrorResponse {
-    success: boolean;
-    message: string;
-}
 
 axiosInstance.interceptors.request.use(
     config => {
@@ -45,7 +42,7 @@ axiosInstance.interceptors.response.use(
         }
         return response;
     },
-    (error: AxiosError<ErrorResponse>) => {
+    (error: AxiosError<ResponseData>) => {
         message.error(error.response?.data.message ?? error.message);
         if (error.response?.status === 401) {
             router.push('/auth');

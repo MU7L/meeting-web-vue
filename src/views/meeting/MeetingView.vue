@@ -32,10 +32,7 @@
         <MyGridLayout />
 
         <div class="control-bar">
-            <ControlBar
-                :disabled="!active"
-                @streamChange="updateLocalStream"
-            />
+            <ControlBar />
         </div>
     </ProfileLayout>
 </template>
@@ -43,7 +40,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
 import { storeToRefs } from 'pinia';
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import MeetingDescription from '@/components/MeetingDescription.vue';
@@ -52,13 +49,12 @@ import usePeerStore from '@/stores/peer';
 import useSettingStore from '@/stores/settings';
 import type { MeetingDetail } from '@/types';
 import axiosInstance, { type ResponseData } from '@/utils/axios';
-import usePeers from '@/utils/peer';
 
 import ControlBar from './components/ControlBar.vue';
 import MyGridLayout from './components/MyGridLayout.vue';
 
 const route = useRoute();
-const mid = route.params.meetingId as string;
+const mid = route.params.mid as string;
 
 const detail = ref<MeetingDetail>();
 
@@ -73,14 +69,18 @@ async function getDetail() {
         updatedAt: dayjs(updatedAt)
     };
 }
-
 onMounted(getDetail);
 
 const { open } = storeToRefs(useSettingStore());
 onMounted(() => open.value = true);
 
-const { active, updateLocalStream } = usePeers(mid);
-const { userMap } = storeToRefs(usePeerStore());
+const store = usePeerStore();
+const {userMap} = storeToRefs(store);
+onMounted(() => store.init(mid));
+onUnmounted(() => {
+    store.destroy();
+    store.$reset();
+})
 
 </script>
 

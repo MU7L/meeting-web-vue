@@ -4,7 +4,6 @@
         name="login"
         :rules="rules"
         @finish="onFinish"
-        @finishFailed="onFinishFailed"
     >
         <a-form-item
             label="邮箱"
@@ -74,10 +73,6 @@ const onFinish = async (values: FormState) => {
         token: res.data.data.token,
     });
     router.push('/');
-};
-
-const onFinishFailed = (errorInfo: any) => {
-    console.log('Failed:', errorInfo);
 };
 
 const disabled = computed(() => {

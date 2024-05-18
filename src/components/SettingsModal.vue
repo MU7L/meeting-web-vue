@@ -46,4 +46,8 @@ function handleOk() {
 .pop-tabs {
     height: 360px;
 }
+
+:deep(.ant-tabs-content-holder) {
+    overflow-y: auto;
+}
 </style>

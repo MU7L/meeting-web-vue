@@ -62,7 +62,6 @@ function handleOpen() {
     nextTick(() => {
         // 只有在wrapper渲染之后 且在nextTick中才能取到大小
         size.value = [wrapperRef.value?.clientWidth || 300, wrapperRef.value?.clientHeight || 150];
-        console.log(wrapperRef.value?.clientWidth, wrapperRef.value?.clientHeight);
     })
 }
 
@@ -85,7 +84,6 @@ function onMouseDown(e: MouseEvent) {
     store.sendCanvasCmd({fn: 'beginPath'})
     ctx.moveTo(lastX, lastY);
     store.sendCanvasCmd({fn: 'moveTo', args: [lastX, lastY]})
-    console.log(wrapperRef.value?.clientWidth, wrapperRef.value?.clientHeight);
 }
 
 function onMouseMove(e: MouseEvent) {

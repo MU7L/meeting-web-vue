@@ -1,6 +1,6 @@
-import { io, Socket } from 'socket.io-client';
+import { io, type Socket } from 'socket.io-client';
 
-const WS = import.meta.env.VITE_WS || 'http://localhost:3000';
+const BASE_URL = import.meta.env.VITE_BASE;
 
 interface ServerToClientEvents {
     join: (uid: string) => void;
@@ -22,7 +22,7 @@ interface ClientToServerEvents {
 export type SocketClient = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 function createSocket(id: string, token: string): SocketClient {
-    return io(WS, {
+    return io(BASE_URL, {
         auth: { id, token }
     });
 }

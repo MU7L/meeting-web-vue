@@ -3,7 +3,7 @@
         <a-dropdown placement="top">
             <a-button
                 :type="constraints.audio ? 'primary' : 'default'"
-                :disabled="$props.disabled || options.audio.length === 0"
+                :disabled="!active || options.audio.length === 0"
                 @click="switchAudio"
             >
                 <AudioOutlined />
@@ -22,7 +22,7 @@
         <a-dropdown placement="top">
             <a-button
                 :type="constraints.video ? 'primary' : 'default'"
-                :disabled="$props.disabled || options.video.length === 0"
+                :disabled="!active || options.video.length === 0"
                 @click="switchVideo"
             >
                 <VideoCameraOutlined />
@@ -40,6 +40,7 @@
 
         <a-button
             :type="displayMediaCtrl.enabled.value ? 'primary' : 'default'"
+            :disabled="!active"
             @click="switchScreen"
         >
             <DesktopOutlined />
@@ -74,23 +75,18 @@ import { useDisplayMedia, useUserMedia } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { onMounted, watch } from 'vue';
 
+import usePeerStore from '@/stores/peer';
 import useSettingStore from '@/stores/settings';
-import ChatDrawer from '@/views/meeting/components/ChatDrawer.vue';
-import WhiteboardModal from '@/views/meeting/components/WhiteboardModal.vue';
 
-const props = withDefaults(defineProps<{
-    disabled: boolean;
-}>(), {
-    disabled: true
-});
+import ChatDrawer from './ChatDrawer.vue';
+import WhiteboardModal from './WhiteboardModal.vue';
 
-const emit = defineEmits<{
-    streamChange: [newStream?: MediaStream, oldStream?: MediaStream];
-}>();
+const settingStore = useSettingStore();
+const { devices, constraints, options } = storeToRefs(settingStore);
+onMounted(settingStore.getInputs)
 
-const store = useSettingStore();
-const { devices, constraints, options } = storeToRefs(store);
-onMounted(store.getInputs)
+const peerStore = usePeerStore();
+const {local, active} = storeToRefs(peerStore);
 
 function selectAudio({ key }: { key: string }) {
     devices.value.audioDeviceId = key;
@@ -122,9 +118,8 @@ watch(
 );
 
 function streamChangeHandler(newStream?: MediaStream, oldStream?: MediaStream) {
-    if (props.disabled) return;
-    console.log('streamChangeHandler', newStream, oldStream);
-    emit('streamChange', newStream, oldStream);
+    if (!active.value) return;
+    peerStore.updateStream(local.value.id, newStream, oldStream)
 }
 
 watch(userStream, streamChangeHandler);

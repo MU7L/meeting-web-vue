@@ -62,7 +62,6 @@ const tmpMsg = ref<string>('');
 function handleSend() {
     store.sendMessage(tmpMsg.value);
     tmpMsg.value = '';
-    console.log(sortedMessages.value);
 }
 </script>
 

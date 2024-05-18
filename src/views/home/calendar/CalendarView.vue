@@ -57,6 +57,7 @@ import {
 import dayjs, { Dayjs } from 'dayjs';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 
 import useAuthStore from '@/stores/auth';
 import type { MeetingInfo, MeetingStatus } from '@/types';
@@ -97,10 +98,15 @@ const StatusColorMap: Record<MeetingStatus, string> = {
     finished: 'green'
 };
 
+const router = useRouter();
 async function handleQuickMeeting() {
     const res =
         await axiosInstance.post<ResponseData<{ mid: string }>>('/meetings');
-    window.open(`/meeting/${res.data.data.mid}`);
+    const url = router.resolve({
+        name: 'meeting',
+        params: { mid: res.data.data.mid }
+    })
+    window.open(url.href);
 }
 
 </script>

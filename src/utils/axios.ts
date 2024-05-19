@@ -4,6 +4,8 @@ import useAuthStore from '@/stores/auth';
 import { message } from 'ant-design-vue';
 import axios, { AxiosError } from 'axios';
 
+const VITE_BASE = import.meta.env.VITE_BASE;
+
 export interface ResponseData<T = any> {
     success: boolean;
     message?: string;
@@ -11,7 +13,7 @@ export interface ResponseData<T = any> {
 }
 
 const axiosInstance = axios.create({
-    baseURL: '/api',
+    baseURL: VITE_BASE + '/api',
     timeout: 10000
 });
 

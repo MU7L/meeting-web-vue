@@ -10,6 +10,7 @@
             v-if="hasVideo"
             ref="videoRef"
             autoplay
+            controls
             :muted="$props.uid === localId"
         />
         <div v-else class="audio-content">

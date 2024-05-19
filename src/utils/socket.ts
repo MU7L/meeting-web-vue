@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-const WS = import.meta.env.VITE_WS || 'http://localhost:3000';
+const WS = import.meta.env.VITE_BASE || 'http://localhost:3000';
 
 interface ServerToClientEvents {
     join: (uid: string) => void;

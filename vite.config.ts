@@ -6,7 +6,7 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     plugins: [
         vue(),
-        basicSsl()
+        // basicSsl()
     ],
     resolve: {
         alias: {
@@ -16,7 +16,7 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         port: 5173,
-        https: true,
+        // https: true,
         proxy: {
             '/api': 'http://localhost:3000',
             '/uploads': 'http://localhost:3000',

@@ -114,7 +114,7 @@ function getOperation(record: Member): Operation[] {
                     danger: true,
                     content: '移除成员',
                     onClick: () => {
-                        message.info('开发中~');
+                        removeMember(record);
                     }
                 }];
             case 'new':
@@ -180,11 +180,26 @@ function copy(text: string) {
 }
 
 async function dissolveTeam() {
+    const tid = selectedTeam.value?._id;
     Modal.confirm({
         title: '确定解散课题组？',
         icon: createVNode(ExclamationCircleOutlined),
         async onOk() {
-            await axiosInstance.delete(`/teams/${selectedTidList.value[0]}`);
+            await axiosInstance.delete(`/teams/${tid}`);
+            await queryTeams();
+        },
+        okType: 'danger',
+    });
+}
+
+async function removeMember(record: Member) {
+    const tid = selectedTeam.value?._id;
+    const uid = record.user._id;
+    Modal.confirm({
+        title: '确定踢出该成员？',
+        icon: createVNode(ExclamationCircleOutlined),
+        async onOk() {
+            await axiosInstance.delete(`/teams/${tid}/members/${uid}`);
             await queryTeams();
         },
         okType: 'danger',

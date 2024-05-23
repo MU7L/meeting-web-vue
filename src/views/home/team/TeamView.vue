@@ -70,10 +70,11 @@
 </template>
 
 <script setup lang="ts">
-import { message } from 'ant-design-vue';
+import { ExclamationCircleOutlined } from '@ant-design/icons-vue';
+import { message, Modal } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref } from 'vue';
+import { computed, createVNode, onMounted, ref } from 'vue';
 
 import AvatarProfile from '@/components/AvatarName.vue';
 import useAuthStore from '@/stores/auth';
@@ -106,9 +107,7 @@ function getOperation(record: Member): Operation[] {
                 return [{
                     danger: true,
                     content: '解散课题组',
-                    onClick: () => {
-                        message.info('开发中~');
-                    }
+                    onClick: dissolveTeam
                 }];
             case 'member':
                 return [{
@@ -178,6 +177,18 @@ const memberColumns = [{
 function copy(text: string) {
     navigator.clipboard.writeText(text);
     message.success('复制成功');
+}
+
+async function dissolveTeam() {
+    Modal.confirm({
+        title: '确定解散课题组？',
+        icon: createVNode(ExclamationCircleOutlined),
+        async onOk() {
+            await axiosInstance.delete(`/teams/${selectedTidList.value[0]}`);
+            await queryTeams();
+        },
+        okType: 'danger',
+    });
 }
 
 async function acceptJoin(record: Member) {

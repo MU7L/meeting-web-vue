@@ -129,9 +129,7 @@ function getOperation(record: Member): Operation[] {
         return [{
             danger: true,
             content: '退出课题组',
-            onClick: () => {
-                message.info('开发中~');
-            }
+            onClick: quitTeam
         }];
     }
     return [];
@@ -213,6 +211,19 @@ async function acceptJoin(record: Member) {
         await axiosInstance.post(`/teams/${tid}/members`, { uid });
         await queryTeams();
     }
+}
+
+async function quitTeam() {
+    const tid = selectedTeam.value?._id;
+    Modal.confirm({
+        title: '确定退出该课题组？',
+        icon: createVNode(ExclamationCircleOutlined),
+        async onOk() {
+            await axiosInstance.delete(`/teams/${tid}/members/${id.value}`);
+            await queryTeams();
+        },
+        okType: 'danger',
+    });
 }
 
 </script>

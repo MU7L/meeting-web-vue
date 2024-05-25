@@ -62,6 +62,7 @@ import useAuthStore from '@/stores/auth';
 import type { MeetingInfo, MeetingStatus } from '@/types';
 import type { ResponseData } from '@/utils/axios';
 import axiosInstance from '@/utils/axios';
+import { useRouter } from 'vue-router';
 
 import BookModal from './modals/BookModal.vue';
 import DetailModal from './modals/DetailModal.vue';
@@ -97,10 +98,16 @@ const StatusColorMap: Record<MeetingStatus, string> = {
     finished: 'green'
 };
 
+const router = useRouter();
+
 async function handleQuickMeeting() {
     const res =
         await axiosInstance.post<ResponseData<{ mid: string }>>('/meetings');
-    window.open(`/meeting/${res.data.data.mid}`);
+    const { href } = router.resolve({
+        name:'meeting',
+        params: { mid: res.data.data.mid }
+    })
+    window.open(href, '_blank');
 }
 
 </script>

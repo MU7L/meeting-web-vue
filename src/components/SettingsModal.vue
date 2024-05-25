@@ -10,9 +10,6 @@
             tab-position="left"
             class="pop-tabs"
         >
-            <a-tab-pane key="profile" tab="个人信息">
-                修改个人信息
-            </a-tab-pane>
             <a-tab-pane key="devices" tab="通话设备">
                 <SettingDeviceTab ref="devicesTabRef" />
             </a-tab-pane>

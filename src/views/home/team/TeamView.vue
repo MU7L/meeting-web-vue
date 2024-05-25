@@ -70,10 +70,11 @@
 </template>
 
 <script setup lang="ts">
-import { message } from 'ant-design-vue';
+import { ExclamationCircleOutlined } from '@ant-design/icons-vue';
+import { message, Modal } from 'ant-design-vue';
 import dayjs from 'dayjs';
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, ref } from 'vue';
+import { computed, createVNode, onMounted, ref } from 'vue';
 
 import AvatarProfile from '@/components/AvatarName.vue';
 import useAuthStore from '@/stores/auth';
@@ -106,16 +107,14 @@ function getOperation(record: Member): Operation[] {
                 return [{
                     danger: true,
                     content: '解散课题组',
-                    onClick: () => {
-                        message.info('开发中~');
-                    }
+                    onClick: dissolveTeam
                 }];
             case 'member':
                 return [{
                     danger: true,
                     content: '移除成员',
                     onClick: () => {
-                        message.info('开发中~');
+                        removeMember(record);
                     }
                 }];
             case 'new':
@@ -130,9 +129,7 @@ function getOperation(record: Member): Operation[] {
         return [{
             danger: true,
             content: '退出课题组',
-            onClick: () => {
-                message.info('开发中~');
-            }
+            onClick: quitTeam
         }];
     }
     return [];
@@ -180,6 +177,33 @@ function copy(text: string) {
     message.success('复制成功');
 }
 
+async function dissolveTeam() {
+    const tid = selectedTeam.value?._id;
+    Modal.confirm({
+        title: '确定解散课题组？',
+        icon: createVNode(ExclamationCircleOutlined),
+        async onOk() {
+            await axiosInstance.delete(`/teams/${tid}`);
+            await queryTeams();
+        },
+        okType: 'danger',
+    });
+}
+
+async function removeMember(record: Member) {
+    const tid = selectedTeam.value?._id;
+    const uid = record.user._id;
+    Modal.confirm({
+        title: '确定踢出该成员？',
+        icon: createVNode(ExclamationCircleOutlined),
+        async onOk() {
+            await axiosInstance.delete(`/teams/${tid}/members/${uid}`);
+            await queryTeams();
+        },
+        okType: 'danger',
+    });
+}
+
 async function acceptJoin(record: Member) {
     const tid = selectedTeam.value?._id;
     const uid = record.user._id;
@@ -187,6 +211,19 @@ async function acceptJoin(record: Member) {
         await axiosInstance.post(`/teams/${tid}/members`, { uid });
         await queryTeams();
     }
+}
+
+async function quitTeam() {
+    const tid = selectedTeam.value?._id;
+    Modal.confirm({
+        title: '确定退出该课题组？',
+        icon: createVNode(ExclamationCircleOutlined),
+        async onOk() {
+            await axiosInstance.delete(`/teams/${tid}/members/${id.value}`);
+            await queryTeams();
+        },
+        okType: 'danger',
+    });
 }
 
 </script>

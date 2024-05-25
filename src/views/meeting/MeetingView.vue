@@ -58,7 +58,7 @@ import ControlBar from './components/ControlBar.vue';
 import MyGridLayout from './components/MyGridLayout.vue';
 
 const route = useRoute();
-const mid = route.params.meetingId as string;
+const mid = route.params.mid as string;
 
 const detail = ref<MeetingDetail>();
 
